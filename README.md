@@ -103,6 +103,8 @@ http://localhost/snipvault
 
 As I learn programming, I often come across useful pieces of code that I want to save for future use. This project helps me keep those snippets organized and easily accessible.
 
+Plus this is like an offline github for me to access whenever i can't access github due to the days where i have no wifi or electricity.
+
 ## Future Improvements
 
 Some features I may add in the future:
