@@ -139,6 +139,38 @@ function updateRemoveButtons() {
         }
     });
 }
+// ---- DARK MODE TOGGLE ----
+// Reads saved preference from localStorage on page load
+// Saves new preference when the button is clicked
 
+const toggleBtn = document.getElementById('theme-toggle');
+
+// Apply saved theme immediately when page loads
+// This runs before the page fully renders so there's no flash of wrong theme
+const savedTheme = localStorage.getItem('theme') || 'light';
+document.body.setAttribute('data-theme', savedTheme);
+if (toggleBtn) {
+    toggleBtn.textContent = savedTheme === 'dark' ? '☀ Light' : '◑ Dark';
+}
+
+// Handle button click
+if (toggleBtn) {
+    toggleBtn.addEventListener('click', function () {
+        // Read current theme from body attribute
+        const current = document.body.getAttribute('data-theme');
+        const next    = current === 'dark' ? 'light' : 'dark';
+
+        // Apply new theme to body — CSS variables swap automatically
+        document.body.setAttribute('data-theme', next);
+
+        // Save preference so it persists across page loads
+        localStorage.setItem('theme', next);
+
+        // Update button label
+        this.textContent = next === 'dark' ? '☀ Light' : '◑ Dark';
+    });
+}
 // Run on page load to set initial state
 updateRemoveButtons();
+
+
