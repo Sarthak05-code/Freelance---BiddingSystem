@@ -1,18 +1,7 @@
-<!-- Close the main content wrapper opened in header.php -->
-</main>
-
-<!-- ===== FOOTER ===== -->
-<footer class="footer">
-    <!-- Simple static footer text -->
-    Snippet Vault — your personal code library
-</footer>
-
-<!-- Prism.js script — must be loaded AFTER the page content -->
-<!-- It scans the page for <code class="language-x"> blocks and colors them -->
-<script src="/snipvault/lib/prism.js"></script>
-
-<!-- Our own JavaScript file for copy button and live search -->
-<script src="/snipvault/js/main.js"></script>
+    <!-- Page footer -->
+    <footer style="border-top: 1px solid var(--border); margin-top: 4rem; padding: 1.5rem 1.25rem; text-align: center;">
+        <p class="text-sm text-muted">BidBoard &mdash; Freelance Task Marketplace</p>
+    </footer>
 
 </body>
 </html>

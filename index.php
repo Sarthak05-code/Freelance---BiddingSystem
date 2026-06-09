@@ -1,95 +1,139 @@
 <?php
-// =============================================
-// index.php — READ (All Snippets)
-// =============================================
+// Public homepage — lists all open tasks, no login required
 
-require 'config/db.php';
-$pageTitle = 'All Snippets';
+require_once 'includes/db.php';
 
-// ---- FETCH ALL SNIPPETS ----
-// Also count how many files each snippet has using a subquery
-// This lets us show "3 files" on the index card
-$stmt = $pdo->query("
-    SELECT
-        s.id,
-        s.title,
-        s.language,
-        s.description,
-        s.created_at,
-        GROUP_CONCAT(DISTINCT t.name ORDER BY t.name SEPARATOR ',') AS tags,
-        COUNT(DISTINCT sf.id) AS file_count
-    FROM snippets s
-    LEFT JOIN snippet_tags st ON s.id = st.snippet_id
-    LEFT JOIN tags t          ON st.tag_id = t.id
-    LEFT JOIN snippet_files sf ON s.id = sf.snippet_id
-    GROUP BY s.id
-    ORDER BY s.created_at DESC
-");
-$snippets = $stmt->fetchAll();
+// Get filter values from URL query string
+$search   = trim($_GET['search']   ?? '');   // keyword search
+$category = trim($_GET['category'] ?? '');   // filter by category
 
-// ---- FETCH LANGUAGES for dropdown ----
-$langStmt  = $pdo->query("SELECT DISTINCT language FROM snippets ORDER BY language ASC");
-$languages = $langStmt->fetchAll();
+// Build query dynamically based on active filters
+$sql    = "SELECT t.*, c.name AS client_name,
+                  (SELECT COUNT(*) FROM bids b WHERE b.task_id = t.id) AS bid_count
+           FROM tasks t
+           JOIN clients c ON t.client_id = c.id
+           WHERE t.status = 'open'";   // only show open tasks publicly
 
-include 'includes/header.php';
+$params = [];    // values for prepared statement
+$types  = '';    // type string for bind_param
+
+// Add keyword search if provided
+if ($search !== '') {
+    $sql     .= " AND (t.title LIKE ? OR t.description LIKE ?)";
+    $like     = '%' . $search . '%';
+    $params[] = $like;
+    $params[] = $like;
+    $types   .= 'ss';
+}
+
+// Add category filter if provided
+if ($category !== '') {
+    $sql     .= " AND t.category = ?";
+    $params[] = $category;
+    $types   .= 's';
+}
+
+$sql .= " ORDER BY t.created_at DESC";   // newest tasks first
+
+// Execute query
+$stmt = $conn->prepare($sql);
+if ($params) {
+    $stmt->bind_param($types, ...$params);   // spread array into bind_param
+}
+$stmt->execute();
+$tasks = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);   // fetch all as array
+$stmt->close();
+
+// Get distinct categories for the filter dropdown
+$cats_result = $conn->query("SELECT DISTINCT category FROM tasks WHERE status = 'open' ORDER BY category");
+$categories  = $cats_result->fetch_all(MYSQLI_ASSOC);
+
+$page_title  = 'Browse Tasks';
+$nav_context = 'public';
+require_once 'includes/header.php';
 ?>
 
-<!-- ===== SEARCH AND FILTER ===== -->
-<div class="search-bar">
-    <input type="text" id="search" placeholder="Search snippets...">
-    <select id="lang-filter">
-        <option value="">All Languages</option>
-        <?php foreach ($languages as $lang): ?>
-            <option value="<?= htmlspecialchars($lang['language']) ?>">
-                <?= htmlspecialchars($lang['language']) ?>
-            </option>
-        <?php endforeach; ?>
-    </select>
+<div class="page-wrap">
+    <div class="container">
+
+        <!-- Page heading -->
+        <div class="page-header">
+            <h1>Open Tasks</h1>
+            <p>Browse available projects and submit your bid — no account needed.</p>
+        </div>
+
+        <!-- Search and filter bar -->
+        <form method="GET" action="" style="display:flex; gap:0.75rem; flex-wrap:wrap; margin-bottom:1.5rem;">
+            <!-- Keyword search input -->
+            <input
+                type="text"
+                name="search"
+                class="form-control"
+                placeholder="Search tasks..."
+                value="<?= htmlspecialchars($search) ?>"
+                style="flex:1; min-width:200px;"
+            >
+
+            <!-- Category dropdown filter -->
+            <select name="category" class="form-control" style="width:200px;">
+                <option value="">All categories</option>
+                <?php foreach ($categories as $cat): ?>
+                    <option
+                        value="<?= htmlspecialchars($cat['category']) ?>"
+                        <?= $category === $cat['category'] ? 'selected' : '' ?>
+                    >
+                        <?= htmlspecialchars($cat['category']) ?>
+                    </option>
+                <?php endforeach; ?>
+            </select>
+
+            <button type="submit" class="btn btn-primary">Filter</button>
+
+            <!-- Clear filters link -->
+            <?php if ($search || $category): ?>
+                <a href="/bidboard/index.php" class="btn btn-ghost">Clear</a>
+            <?php endif; ?>
+        </form>
+
+        <!-- Task grid or empty state -->
+        <?php if (empty($tasks)): ?>
+            <div class="empty-state">
+                <h3>No tasks found</h3>
+                <p>Try a different search or check back later.</p>
+            </div>
+        <?php else: ?>
+            <div class="task-grid">
+                <?php foreach ($tasks as $task): ?>
+                    <!-- Each task is a clickable card -->
+                    <a href="/bidboard/task.php?id=<?= $task['id'] ?>" class="task-card">
+                        <div class="task-card-title"><?= htmlspecialchars($task['title']) ?></div>
+                        <div class="task-card-desc"><?= htmlspecialchars($task['description']) ?></div>
+
+                        <div class="task-card-meta">
+                            <!-- Category badge -->
+                            <span class="badge badge-category"><?= htmlspecialchars($task['category']) ?></span>
+
+                            <!-- Budget display -->
+                            <span class="text-sm" style="color:var(--success); font-weight:600;">
+                                $<?= number_format($task['budget'], 2) ?>
+                            </span>
+
+                            <!-- Bid count -->
+                            <span class="text-sm text-muted">
+                                <?= $task['bid_count'] ?> bid<?= $task['bid_count'] != 1 ? 's' : '' ?>
+                            </span>
+
+                            <!-- Deadline -->
+                            <span class="text-sm text-muted" style="margin-left:auto;">
+                                Due <?= date('M j', strtotime($task['deadline'])) ?>
+                            </span>
+                        </div>
+                    </a>
+                <?php endforeach; ?>
+            </div>
+        <?php endif; ?>
+
+    </div>
 </div>
 
-<!-- ===== SNIPPET LIST ===== -->
-<?php if (empty($snippets)): ?>
-    <p class="empty">No snippets yet. <a href="create.php">Add your first one.</a></p>
-<?php else: ?>
-    <?php foreach ($snippets as $snippet): ?>
-        <div class="snippet-row" data-language="<?= htmlspecialchars($snippet['language']) ?>">
-
-            <div class="snippet-header">
-                <span class="snippet-title"><?= htmlspecialchars($snippet['title']) ?></span>
-                <span class="badge"><?= htmlspecialchars(strtoupper($snippet['language'])) ?></span>
-            </div>
-
-            <?php if (!empty($snippet['description'])): ?>
-                <div class="snippet-desc"><?= htmlspecialchars($snippet['description']) ?></div>
-            <?php endif; ?>
-
-            <!-- Show how many files this snippet has -->
-            <div class="file-count">
-                <?= $snippet['file_count'] ?> file<?= $snippet['file_count'] != 1 ? 's' : '' ?>
-            </div>
-
-            <div class="snippet-footer">
-                <div class="tags">
-                    <?php if (!empty($snippet['tags'])): ?>
-                        <?php foreach (explode(',', $snippet['tags']) as $tag): ?>
-                            <span class="tag">#<?= htmlspecialchars(trim($tag)) ?></span>
-                        <?php endforeach; ?>
-                    <?php endif; ?>
-                </div>
-
-                <div class="actions">
-                    <a href="view.php?id=<?= $snippet['id'] ?>" class="btn">View</a>
-                    <a href="edit.php?id=<?= $snippet['id'] ?>" class="btn">Edit</a>
-                    <form method="POST" action="delete.php"
-                          onsubmit="return confirm('Delete this snippet?')">
-                        <input type="hidden" name="id" value="<?= $snippet['id'] ?>">
-                        <button type="submit" class="btn btn-danger">Delete</button>
-                    </form>
-                </div>
-            </div>
-
-        </div>
-    <?php endforeach; ?>
-<?php endif; ?>
-
-<?php include 'includes/footer.php'; ?>
+<?php require_once 'includes/footer.php'; ?>
