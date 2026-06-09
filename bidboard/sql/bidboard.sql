@@ -55,7 +55,3 @@ INSERT INTO admins (username, password) VALUES (
     'admin',
     '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi'
 );
-
-UPDATE admins
-SET password = '$2y$10$X.fML4y3/FWDGN/AMj4Nte71pJ2ighg33pnWIp2mOobHV.U8tBKuy'
-WHERE username = 'admin';
