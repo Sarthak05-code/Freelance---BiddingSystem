@@ -1,0 +1,22 @@
+# Database config — don't expose credentials
+includes/db.php
+
+# Keep a sample so others know what db.php should look like
+# (rename db.php to db.sample.php and push that instead)
+
+# OS clutter
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editor folders
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# XAMPP logs that sometimes end up in project folders
+*.log
+
+# Zip files (we don't need these in the repo)
+*.zip
