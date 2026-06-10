@@ -52,7 +52,9 @@ Clients post tasks, freelancers bid on them without needing an account, and clie
 
 5. Import `sql/bidboard.sql` into that database.
 
-6. Open the app at:
+6. Copy `includes/db.sample.php` to `includes/db.php` — default XAMPP credentials are already set so no changes needed unless your MySQL uses a different password.
+
+7. Open the app at:
    ```
    http://localhost/bidboard/
    ```
