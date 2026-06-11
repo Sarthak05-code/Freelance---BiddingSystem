@@ -19,7 +19,12 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.2'
+          tools: phpcs
 
       - name: Lint PHP files for syntax errors
         run: |
           find . -name "*.php" -print0 | xargs -0 -n1 php -l
+
+      - name: Check coding standards (PHPCS)
+        run: |
+          phpcs --standard=PSR12 --extensions=php . || truephp -l
