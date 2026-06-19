@@ -1,4 +1,4 @@
-name: Freelance-Bidding CI
+name: Freelance-Bidding-System CI
 
 on:
   pull_request:
