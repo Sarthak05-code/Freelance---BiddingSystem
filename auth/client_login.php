@@ -15,6 +15,9 @@ require_once '../includes/db.php';
 $error = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (!verify_csrf_token($_POST['csrf_token'] ?? '')) {
+        die('Invalid CSRF token. Please go back and try again.');
+    }
     $email    = trim($_POST['email']    ?? '');
     $password = trim($_POST['password'] ?? '');
 
@@ -60,6 +63,7 @@ require_once '../includes/header.php';
         <?php endif; ?>
 
         <form method="POST" action="">
+            <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(generate_csrf_token()) ?>">
             <div class="form-group">
                 <label class="form-label" for="email">Email</label>
                 <input
@@ -70,8 +74,7 @@ require_once '../includes/header.php';
                     placeholder="you@example.com"
                     value="<?= htmlspecialchars($_POST['email'] ?? '') ?>"
                     autocomplete="email"
-                    required
-                >
+                    required>
             </div>
 
             <div class="form-group">
@@ -83,8 +86,7 @@ require_once '../includes/header.php';
                     class="form-control"
                     placeholder="••••••••"
                     autocomplete="current-password"
-                    required
-                >
+                    required>
             </div>
 
             <button type="submit" class="btn btn-primary" style="width:100%; margin-top:0.5rem;">

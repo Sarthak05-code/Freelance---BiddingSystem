@@ -17,6 +17,9 @@ $error   = '';
 $success = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (!verify_csrf_token($_POST['csrf_token'] ?? '')) {
+        die('Invalid CSRF token. Please go back and try again.');
+    }
     $name        = trim($_POST['name']         ?? '');
     $email       = trim($_POST['email']        ?? '');
     $new_pass    = trim($_POST['new_password'] ?? '');    // optional — blank means don't change
@@ -108,6 +111,7 @@ require_once '../includes/header.php';
         <div class="card">
             <div class="card-body">
                 <form method="POST" action="">
+                    <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(generate_csrf_token()) ?>">
 
                     <!-- Name -->
                     <div class="form-group">
@@ -118,8 +122,7 @@ require_once '../includes/header.php';
                             name="name"
                             class="form-control"
                             value="<?= htmlspecialchars($client['name']) ?>"
-                            required
-                        >
+                            required>
                     </div>
 
                     <!-- Email -->
@@ -131,8 +134,7 @@ require_once '../includes/header.php';
                             name="email"
                             class="form-control"
                             value="<?= htmlspecialchars($client['email']) ?>"
-                            required
-                        >
+                            required>
                     </div>
 
                     <!-- Divider for password section -->
@@ -151,8 +153,7 @@ require_once '../includes/header.php';
                             name="new_password"
                             class="form-control"
                             placeholder="Min. 6 characters"
-                            autocomplete="new-password"
-                        >
+                            autocomplete="new-password">
                     </div>
 
                     <!-- Confirm new password -->
@@ -164,8 +165,7 @@ require_once '../includes/header.php';
                             name="confirm"
                             class="form-control"
                             placeholder="Repeat new password"
-                            autocomplete="new-password"
-                        >
+                            autocomplete="new-password">
                     </div>
 
                     <!-- Divider -->
@@ -181,8 +181,7 @@ require_once '../includes/header.php';
                             class="form-control"
                             placeholder="Required to save any changes"
                             autocomplete="current-password"
-                            required
-                        >
+                            required>
                         <p class="form-hint">We verify your identity before saving changes.</p>
                     </div>
 

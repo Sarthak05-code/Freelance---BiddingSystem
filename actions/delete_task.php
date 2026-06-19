@@ -11,6 +11,9 @@ if (!isset($_SESSION['client_id'])) {
 }
 
 require_once '../includes/db.php';
+if (!verify_csrf_token($_POST['csrf_token'] ?? '')) {
+    die('Invalid CSRF token. Please go back and try again.');
+}
 
 $client_id = $_SESSION['client_id'];
 $task_id   = (int)($_POST['task_id']  ?? 0);
@@ -31,4 +34,3 @@ $_SESSION['flash'] = 'Task deleted.';
 
 header('Location: /bidboard/client/dashboard.php');
 exit();
-?>

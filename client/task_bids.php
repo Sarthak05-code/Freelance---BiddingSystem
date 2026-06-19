@@ -60,7 +60,7 @@ require_once '../includes/header.php';
 
         <!-- Back link -->
         <a href="/bidboard/client/dashboard.php" class="text-sm text-muted"
-           style="text-decoration:none; display:inline-block; margin-bottom:1rem;">
+            style="text-decoration:none; display:inline-block; margin-bottom:1rem;">
             &larr; Back to dashboard
         </a>
 
@@ -83,8 +83,9 @@ require_once '../includes/header.php';
             <!-- Mark completed button (only when in_progress) -->
             <?php if ($task['status'] === 'in_progress'): ?>
                 <form method="POST" action="/bidboard/actions/update_task_status.php">
-                    <input type="hidden" name="task_id"  value="<?= $task['id'] ?>">
-                    <input type="hidden" name="status"   value="completed">
+                    <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(generate_csrf_token()) ?>">
+                    <input type="hidden" name="task_id" value="<?= $task['id'] ?>">
+                    <input type="hidden" name="status" value="completed">
                     <input type="hidden" name="redirect" value="bids">
                     <button type="submit" class="btn btn-success">Mark as completed</button>
                 </form>
@@ -156,14 +157,16 @@ require_once '../includes/header.php';
                         <div style="display:flex; flex-direction:column; gap:0.4rem; flex-shrink:0;">
                             <!-- Accept bid -->
                             <form method="POST" action="/bidboard/actions/accept_bid.php">
-                                <input type="hidden" name="bid_id"  value="<?= $bid['id'] ?>">
+                                <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(generate_csrf_token()) ?>">
+                                <input type="hidden" name="bid_id" value="<?= $bid['id'] ?>">
                                 <input type="hidden" name="task_id" value="<?= $task['id'] ?>">
                                 <button type="submit" class="btn btn-success btn-sm" style="width:100%;">Accept</button>
                             </form>
 
                             <!-- Reject bid -->
                             <form method="POST" action="/bidboard/actions/reject_bid.php">
-                                <input type="hidden" name="bid_id"  value="<?= $bid['id'] ?>">
+                                <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(generate_csrf_token()) ?>">
+                                <input type="hidden" name="bid_id" value="<?= $bid['id'] ?>">
                                 <input type="hidden" name="task_id" value="<?= $task['id'] ?>">
                                 <button type="submit" class="btn btn-ghost btn-sm" style="width:100%;">Reject</button>
                             </form>

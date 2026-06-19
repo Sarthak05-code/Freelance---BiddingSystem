@@ -17,6 +17,9 @@ $error = '';   // holds any login error message
 
 // Handle form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (!verify_csrf_token($_POST['csrf_token'] ?? '')) {
+        die('Invalid CSRF token. Please go back and try again.');
+    }
     $username = trim($_POST['username'] ?? '');   // get submitted username
     $password = trim($_POST['password'] ?? '');   // get submitted password
 
@@ -59,6 +62,7 @@ require_once '../includes/header.php';
         <?php endif; ?>
 
         <form method="POST" action="">
+            <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(generate_csrf_token()) ?>">
             <div class="form-group">
                 <label class="form-label" for="username">Username</label>
                 <input
@@ -69,8 +73,7 @@ require_once '../includes/header.php';
                     placeholder="admin"
                     value="<?= htmlspecialchars($_POST['username'] ?? '') ?>"
                     autocomplete="username"
-                    required
-                >
+                    required>
             </div>
 
             <div class="form-group">
@@ -82,8 +85,7 @@ require_once '../includes/header.php';
                     class="form-control"
                     placeholder="••••••••"
                     autocomplete="current-password"
-                    required
-                >
+                    required>
                 <p class="form-hint">Default credentials: admin / admin123</p>
             </div>
 

@@ -42,6 +42,9 @@ $categories = [
 ];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (!verify_csrf_token($_POST['csrf_token'] ?? '')) {
+        die('Invalid CSRF token. Please go back and try again.');
+    }
     $title       = trim($_POST['title']       ?? '');
     $description = trim($_POST['description'] ?? '');
     $category    = trim($_POST['category']    ?? '');
@@ -102,6 +105,7 @@ require_once '../includes/header.php';
         <div class="card">
             <div class="card-body">
                 <form method="POST" action="">
+                    <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(generate_csrf_token()) ?>">
 
                     <div class="form-group">
                         <label class="form-label" for="title">Task title</label>

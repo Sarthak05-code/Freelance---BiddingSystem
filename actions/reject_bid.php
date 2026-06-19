@@ -10,6 +10,9 @@ if (!isset($_SESSION['client_id'])) {
 }
 
 require_once '../includes/db.php';
+if (!verify_csrf_token($_POST['csrf_token'] ?? '')) {
+    die('Invalid CSRF token. Please go back and try again.');
+}
 
 $client_id = $_SESSION['client_id'];
 $bid_id    = (int)($_POST['bid_id']  ?? 0);
@@ -43,4 +46,3 @@ $_SESSION['flash'] = 'Bid rejected.';
 
 header('Location: /bidboard/client/task_bids.php?id=' . $task_id);
 exit();
-?>

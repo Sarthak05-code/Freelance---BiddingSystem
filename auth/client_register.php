@@ -15,6 +15,9 @@ $error   = '';
 $success = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (!verify_csrf_token($_POST['csrf_token'] ?? '')) {
+        die('Invalid CSRF token. Please go back and try again.');
+    }
     $name     = trim($_POST['name']     ?? '');
     $email    = trim($_POST['email']    ?? '');
     $password = trim($_POST['password'] ?? '');
@@ -77,6 +80,7 @@ require_once '../includes/header.php';
         <?php endif; ?>
 
         <form method="POST" action="">
+            <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(generate_csrf_token()) ?>">
             <div class="form-group">
                 <label class="form-label" for="name">Full name</label>
                 <input
@@ -86,8 +90,7 @@ require_once '../includes/header.php';
                     class="form-control"
                     placeholder="Jane Doe"
                     value="<?= htmlspecialchars($_POST['name'] ?? '') ?>"
-                    required
-                >
+                    required>
             </div>
 
             <div class="form-group">
@@ -99,8 +102,7 @@ require_once '../includes/header.php';
                     class="form-control"
                     placeholder="you@example.com"
                     value="<?= htmlspecialchars($_POST['email'] ?? '') ?>"
-                    required
-                >
+                    required>
             </div>
 
             <div class="form-group">
@@ -111,8 +113,7 @@ require_once '../includes/header.php';
                     name="password"
                     class="form-control"
                     placeholder="Min. 6 characters"
-                    required
-                >
+                    required>
             </div>
 
             <div class="form-group">
@@ -123,8 +124,7 @@ require_once '../includes/header.php';
                     name="confirm"
                     class="form-control"
                     placeholder="Repeat password"
-                    required
-                >
+                    required>
             </div>
 
             <button type="submit" class="btn btn-primary" style="width:100%; margin-top:0.5rem;">

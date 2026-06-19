@@ -36,6 +36,9 @@ $success = '';
 
 // Handle bid submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && $task['status'] === 'open') {
+    if (!verify_csrf_token($_POST['csrf_token'] ?? '')) {
+        die('Invalid CSRF token. Please go back and try again.');
+    }
     $name     = trim($_POST['freelancer_name']  ?? '');
     $email    = trim($_POST['freelancer_email'] ?? '');
     $price    = trim($_POST['proposed_price']   ?? '');
@@ -200,6 +203,7 @@ require_once 'includes/header.php';
 
                             <?php if (!$success): ?>
                                 <form method="POST" action="">
+                                    <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(generate_csrf_token()) ?>">
                                     <div class="form-group">
                                         <label class="form-label" for="freelancer_name">Your name</label>
                                         <input
@@ -209,8 +213,7 @@ require_once 'includes/header.php';
                                             class="form-control"
                                             placeholder="Jane Doe"
                                             value="<?= htmlspecialchars($_POST['freelancer_name'] ?? '') ?>"
-                                            required
-                                        >
+                                            required>
                                     </div>
 
                                     <div class="form-group">
@@ -222,8 +225,7 @@ require_once 'includes/header.php';
                                             class="form-control"
                                             placeholder="you@example.com"
                                             value="<?= htmlspecialchars($_POST['freelancer_email'] ?? '') ?>"
-                                            required
-                                        >
+                                            required>
                                         <p class="form-hint">The client will contact you here.</p>
                                     </div>
 
@@ -238,8 +240,7 @@ require_once 'includes/header.php';
                                             min="1"
                                             step="0.01"
                                             value="<?= htmlspecialchars($_POST['proposed_price'] ?? '') ?>"
-                                            required
-                                        >
+                                            required>
                                         <p class="form-hint">Client budget: $<?= number_format($task['budget'], 2) ?></p>
                                     </div>
 
@@ -250,8 +251,7 @@ require_once 'includes/header.php';
                                             name="pitch"
                                             class="form-control"
                                             placeholder="Briefly explain your experience and approach..."
-                                            required
-                                        ><?= htmlspecialchars($_POST['pitch'] ?? '') ?></textarea>
+                                            required><?= htmlspecialchars($_POST['pitch'] ?? '') ?></textarea>
                                     </div>
 
                                     <button type="submit" class="btn btn-primary" style="width:100%;">

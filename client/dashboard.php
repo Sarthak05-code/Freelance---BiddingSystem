@@ -152,6 +152,7 @@ require_once '../includes/header.php';
                                             <!-- Mark completed (only when in_progress) -->
                                             <?php if ($task['status'] === 'in_progress'): ?>
                                                 <form method="POST" action="/bidboard/actions/update_task_status.php" style="display:inline;">
+                                                    <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(generate_csrf_token()) ?>">
                                                     <input type="hidden" name="task_id" value="<?= $task['id'] ?>">
                                                     <input type="hidden" name="status" value="completed">
                                                     <input type="hidden" name="redirect" value="dashboard">
@@ -171,6 +172,7 @@ require_once '../includes/header.php';
                                                 <form method="POST" action="/bidboard/actions/delete_task.php"
                                                     style="display:inline;"
                                                     onsubmit="return confirm('Delete this task and all its bids?')">
+                                                    <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(generate_csrf_token()) ?>">
                                                     <input type="hidden" name="task_id" value="<?= $task['id'] ?>">
                                                     <input type="hidden" name="redirect" value="dashboard">
                                                     <button type="submit" class="btn btn-danger btn-sm">Delete</button>
