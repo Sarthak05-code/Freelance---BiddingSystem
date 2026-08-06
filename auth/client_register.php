@@ -1,73 +1,76 @@
 <?php
 // Client registration page
 
-session_name('bidboard_client');
+session_name("bidboard_client");
 session_start();
 
-if (isset($_SESSION['client_id'])) {
-    header('Location: /bidboard/client/dashboard.php');
+if (isset($_SESSION["client_id"])) {
+    header("Location: /bidboard/client/dashboard.php");
     exit();
 }
 
-require_once '../includes/db.php';
+require_once "../includes/db.php";
 
-$error   = '';
-$success = '';
+$error = "";
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    if (!verify_csrf_token($_POST['csrf_token'] ?? '')) {
-        die('Invalid CSRF token. Please go back and try again.');
+if ($_SERVER["REQUEST_METHOD"] === "POST") {
+    if (!verify_csrf_token($_POST["csrf_token"] ?? "")) {
+        die("Invalid CSRF token. Please go back and try again.");
     }
-    $name     = trim($_POST['name']     ?? '');
-    $email    = trim($_POST['email']    ?? '');
-    $password = trim($_POST['password'] ?? '');
-    $confirm  = trim($_POST['confirm']  ?? '');
+    $name = trim($_POST["name"] ?? "");
+    $email = trim($_POST["email"] ?? "");
+
+    // NOTE : to not trim password as users may intentionally want it like that.
+    $password = $_POST["password"] ?? "";
+    $confirm = $_POST["confirm"] ?? "";
 
     // Basic validation
-    if ($name === '' || $email === '' || $password === '') {
-        $error = 'All fields are required.';
+    if ($name === "" || $email === "" || $password === "") {
+        $error = "All fields are required.";
     } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-        $error = 'Enter a valid email address.';
+        $error = "Enter a valid email address.";
     } elseif (strlen($password) < 6) {
-        $error = 'Password must be at least 6 characters.';
+        $error = "Password must be at least 6 characters.";
     } elseif ($password !== $confirm) {
-        $error = 'Passwords do not match.';
+        $error = "Passwords do not match.";
     } else {
         // Check if email is already taken
         $stmt = $conn->prepare("SELECT id FROM clients WHERE email = ?");
-        $stmt->bind_param('s', $email);
+        $stmt->bind_param("s", $email);
         $stmt->execute();
         $stmt->store_result();
 
         if ($stmt->num_rows > 0) {
-            $error = 'An account with that email already exists.';
+            $error = "An account with that email already exists.";
             $stmt->close();
         } else {
             $stmt->close();
 
             // Hash password and insert new client
             $hashed = password_hash($password, PASSWORD_BCRYPT);
-            $ins    = $conn->prepare("INSERT INTO clients (name, email, password) VALUES (?, ?, ?)");
-            $ins->bind_param('sss', $name, $email, $hashed);
+            $ins = $conn->prepare(
+                "INSERT INTO clients (name, email, password) VALUES (?, ?, ?)",
+            );
+            $ins->bind_param("sss", $name, $email, $hashed);
 
             if ($ins->execute()) {
                 // Auto-login after registration
-                $_SESSION['client_id']   = $conn->insert_id;
-                $_SESSION['client_name'] = $name;
+                $_SESSION["client_id"] = $conn->insert_id;
+                $_SESSION["client_name"] = $name;
                 $ins->close();
-                header('Location: /bidboard/client/dashboard.php');
+                header("Location: /bidboard/client/dashboard.php");
                 exit();
             } else {
-                $error = 'Registration failed. Please try again.';
+                $error = "Registration failed. Please try again.";
                 $ins->close();
             }
         }
     }
 }
 
-$page_title  = 'Create Account';
-$nav_context = 'public';
-require_once '../includes/header.php';
+$page_title = "Create Account";
+$nav_context = "public";
+require_once "../includes/header.php";
 ?>
 
 <div class="auth-wrap">
@@ -80,7 +83,9 @@ require_once '../includes/header.php';
         <?php endif; ?>
 
         <form method="POST" action="">
-            <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(generate_csrf_token()) ?>">
+            <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(
+                generate_csrf_token(),
+            ) ?>">
             <div class="form-group">
                 <label class="form-label" for="name">Full name</label>
                 <input
@@ -89,7 +94,7 @@ require_once '../includes/header.php';
                     name="name"
                     class="form-control"
                     placeholder="Jane Doe"
-                    value="<?= htmlspecialchars($_POST['name'] ?? '') ?>"
+                    value="<?= htmlspecialchars($_POST["name"] ?? "") ?>"
                     required>
             </div>
 
@@ -101,7 +106,7 @@ require_once '../includes/header.php';
                     name="email"
                     class="form-control"
                     placeholder="you@example.com"
-                    value="<?= htmlspecialchars($_POST['email'] ?? '') ?>"
+                    value="<?= htmlspecialchars($_POST["email"] ?? "") ?>"
                     required>
             </div>
 
@@ -139,4 +144,4 @@ require_once '../includes/header.php';
     </div>
 </div>
 
-<?php require_once '../includes/footer.php'; ?>
+<?php require_once "../includes/footer.php"; ?>

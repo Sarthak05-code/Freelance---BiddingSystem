@@ -2,54 +2,57 @@
 // Admin login page
 // Uses a separate session name to avoid conflicts with client session
 
-session_name('bidboard_admin');   // unique session for admin
+session_name("bidboard_admin"); // unique session for admin
 session_start();
 
 // If already logged in, go straight to dashboard
-if (isset($_SESSION['admin_id'])) {
-    header('Location: /bidboard/admin/dashboard.php');
+if (isset($_SESSION["admin_id"])) {
+    header("Location: /bidboard/admin/dashboard.php");
     exit();
 }
 
-require_once '../includes/db.php';
+require_once "../includes/db.php";
 
-$error = '';   // holds any login error message
+$error = ""; // holds any login error message
 
 // Handle form submission
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    if (!verify_csrf_token($_POST['csrf_token'] ?? '')) {
-        die('Invalid CSRF token. Please go back and try again.');
+if ($_SERVER["REQUEST_METHOD"] === "POST") {
+    if (!verify_csrf_token($_POST["csrf_token"] ?? "")) {
+        die("Invalid CSRF token. Please go back and try again.");
     }
-    $username = trim($_POST['username'] ?? '');   // get submitted username
-    $password = trim($_POST['password'] ?? '');   // get submitted password
+    $username = trim($_POST["username"] ?? ""); // get submitted username
+    // remove trim in password , as user may intentionally want a password with space.
+    $password = $_POST["password"] ?? ""; // get submitted password
 
-    if ($username === '' || $password === '') {
-        $error = 'Please fill in both fields.';
+    if ($username === "" || $password === "") {
+        $error = "Please fill in both fields.";
     } else {
         // Look up admin by username
-        $stmt = $conn->prepare("SELECT id, username, password FROM admins WHERE username = ?");
-        $stmt->bind_param('s', $username);
+        $stmt = $conn->prepare(
+            "SELECT id, username, password FROM admins WHERE username = ?",
+        );
+        $stmt->bind_param("s", $username);
         $stmt->execute();
         $result = $stmt->get_result();
-        $admin  = $result->fetch_assoc();
+        $admin = $result->fetch_assoc();
         $stmt->close();
 
         // Verify password hash
-        if ($admin && password_verify($password, $admin['password'])) {
+        if ($admin && password_verify($password, $admin["password"])) {
             // Store admin info in session
-            $_SESSION['admin_id']   = $admin['id'];
-            $_SESSION['admin_name'] = $admin['username'];
-            header('Location: /bidboard/admin/dashboard.php');
+            $_SESSION["admin_id"] = $admin["id"];
+            $_SESSION["admin_name"] = $admin["username"];
+            header("Location: /bidboard/admin/dashboard.php");
             exit();
         } else {
-            $error = 'Invalid username or password.';
+            $error = "Invalid username or password.";
         }
     }
 }
 
-$page_title  = 'Admin Login';
-$nav_context = 'public';
-require_once '../includes/header.php';
+$page_title = "Admin Login";
+$nav_context = "public";
+require_once "../includes/header.php";
 ?>
 
 <div class="auth-wrap">
@@ -62,7 +65,9 @@ require_once '../includes/header.php';
         <?php endif; ?>
 
         <form method="POST" action="">
-            <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(generate_csrf_token()) ?>">
+            <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(
+                generate_csrf_token(),
+            ) ?>">
             <div class="form-group">
                 <label class="form-label" for="username">Username</label>
                 <input
@@ -71,7 +76,7 @@ require_once '../includes/header.php';
                     name="username"
                     class="form-control"
                     placeholder="admin"
-                    value="<?= htmlspecialchars($_POST['username'] ?? '') ?>"
+                    value="<?= htmlspecialchars($_POST["username"] ?? "") ?>"
                     autocomplete="username"
                     required>
             </div>
@@ -96,4 +101,4 @@ require_once '../includes/header.php';
     </div>
 </div>
 
-<?php require_once '../includes/footer.php'; ?>
+<?php require_once "../includes/footer.php"; ?>

@@ -3,8 +3,8 @@
 // $page_title should be set before including this file
 // $nav_context should be 'public', 'client', or 'admin'
 
-$page_title   = $page_title   ?? 'BidBoard';
-$nav_context  = $nav_context  ?? 'public';
+$page_title = $page_title ?? "BidBoard";
+$nav_context = $nav_context ?? "public";
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -27,13 +27,13 @@ $nav_context  = $nav_context  ?? 'public';
             <a href="/bidboard/index.php" class="navbar-brand">Bid<span>Board</span></a>
 
             <ul class="navbar-links">
-                <?php if ($nav_context === 'public'): ?>
+                <?php if ($nav_context === "public"): ?>
                     <!-- Public nav: browse tasks, login options -->
                     <li><a href="/bidboard/index.php">Browse Tasks</a></li>
                     <li><a href="/bidboard/auth/client_login.php">Client Login</a></li>
                     <li><a href="/bidboard/auth/admin_login.php" class="text-muted text-sm">Admin</a></li>
                     <li><a href="/bidboard/bid_status.php">My Bids</a></li>
-                <?php elseif ($nav_context === 'client'): ?>
+                <?php elseif ($nav_context === "client"): ?>
                     <!-- Client nav: dashboard, post, logout -->
                     <li><a href="/bidboard/client/dashboard.php">Dashboard</a></li>
                     <li><a href="/bidboard/client/post_task.php">Post Task</a></li>
@@ -41,12 +41,14 @@ $nav_context  = $nav_context  ?? 'public';
                         <!-- Client name links to edit profile -->
                         <a href="/bidboard/client/edit_profile.php"
                             style="padding: 0.4rem 0.5rem; color:var(--muted); text-decoration:none; font-size:0.9rem;">
-                            <?= htmlspecialchars($_SESSION['client_name'] ?? '') ?>
+                            <?= htmlspecialchars(
+                                $_SESSION["client_name"] ?? "",
+                            ) ?>
                         </a>
                     </li>
                     <li><a href="/bidboard/auth/logout.php?role=client">Logout</a></li>
 
-                <?php elseif ($nav_context === 'admin'): ?>
+                <?php elseif ($nav_context === "admin"): ?>
                     <!-- Admin nav: all sections -->
                     <li><a href="/bidboard/admin/dashboard.php">Dashboard</a></li>
                     <li><a href="/bidboard/admin/tasks.php">Tasks</a></li>
@@ -57,15 +59,17 @@ $nav_context  = $nav_context  ?? 'public';
             </ul>
         </div>
     </nav>
-    <?php if ($nav_context === 'client'): ?>
+    <?php if ($nav_context === "client"): ?>
         <div style="background:var(--accent); color:#fff; text-align:center; padding:0.35rem; font-size:0.78rem; font-weight:600; letter-spacing:0.05em; text-transform:uppercase;">
-            Client Dashboard — <?= htmlspecialchars($_SESSION['client_name'] ?? '') ?>
+            Client Dashboard — <?= htmlspecialchars(
+                $_SESSION["client_name"] ?? "",
+            ) ?>
         </div>
-    <?php elseif ($nav_context === 'admin'): ?>
+    <?php elseif ($nav_context === "admin"): ?>
         <div style="background:#7c3aed; color:#fff; text-align:center; padding:0.35rem; font-size:0.78rem; font-weight:600; letter-spacing:0.05em; text-transform:uppercase;">
-            Admin Panel — <?= htmlspecialchars($_SESSION['admin_name'] ?? '') ?>
+            Admin Panel — <?= htmlspecialchars($_SESSION["admin_name"] ?? "") ?>
         </div>
-    <?php elseif ($nav_context === 'public'): ?>
+    <?php elseif ($nav_context === "public"): ?>
         <div style="background:var(--success); color:#fff; text-align:center; padding:0.35rem; font-size:0.78rem; font-weight:600; letter-spacing:0.05em; text-transform:uppercase;">
             Browsing as Guest — <a href="/bidboard/auth/client_login.php" style="color:#fff; text-decoration:underline;">Sign in as Client</a>
         </div>
