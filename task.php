@@ -2,14 +2,14 @@
 // Single task page — shows task details and bid submission form
 // Accessible to anyone (no login required)
 
-require_once 'includes/db.php';
+require_once "includes/db.php";
 
 // Get task ID from URL
-$task_id = (int)($_GET['id'] ?? 0);   // cast to int for safety
+$task_id = (int) ($_GET["id"] ?? 0); // cast to int for safety
 
 if ($task_id <= 0) {
     // Invalid ID — redirect home
-    header('Location: /bidboard/index.php');
+    header("Location: /bidboard/index.php");
     exit();
 }
 
@@ -18,63 +18,66 @@ $stmt = $conn->prepare(
     "SELECT t.*, c.name AS client_name
      FROM tasks t
      JOIN clients c ON t.client_id = c.id
-     WHERE t.id = ?"
+     WHERE t.id = ?",
 );
-$stmt->bind_param('i', $task_id);
+$stmt->bind_param("i", $task_id);
 $stmt->execute();
 $task = $stmt->get_result()->fetch_assoc();
 $stmt->close();
 
 // Task not found
 if (!$task) {
-    header('Location: /bidboard/index.php');
+    header("Location: /bidboard/index.php");
     exit();
 }
 
-$error   = '';
-$success = '';
+$error = "";
+$success = "";
 
 // Handle bid submission
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && $task['status'] === 'open') {
-    if (!verify_csrf_token($_POST['csrf_token'] ?? '')) {
-        die('Invalid CSRF token. Please go back and try again.');
+if ($_SERVER["REQUEST_METHOD"] === "POST" && $task["status"] === "open") {
+    if (!verify_csrf_token($_POST["csrf_token"] ?? "")) {
+        die("Invalid CSRF token. Please go back and try again.");
     }
-    $name     = trim($_POST['freelancer_name']  ?? '');
-    $email    = trim($_POST['freelancer_email'] ?? '');
-    $price    = trim($_POST['proposed_price']   ?? '');
-    $pitch    = trim($_POST['pitch']            ?? '');
+    $name = trim($_POST["freelancer_name"] ?? "");
+    $email = trim($_POST["freelancer_email"] ?? "");
+    $price = trim($_POST["proposed_price"] ?? "");
+    $pitch = trim($_POST["pitch"] ?? "");
 
     // Validation
-    if ($name === '' || $email === '' || $price === '' || $pitch === '') {
-        $error = 'All fields are required.';
+    if ($name === "" || $email === "" || $price === "" || $pitch === "") {
+        $error = "All fields are required.";
     } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-        $error = 'Enter a valid email address.';
+        $error = "Enter a valid email address.";
     } elseif (!is_numeric($price) || $price <= 0) {
-        $error = 'Enter a valid bid amount.';
+        $error = "Enter a valid bid amount.";
     } else {
         // Check if this email already submitted a bid on this task
-        $dup = $conn->prepare("SELECT id FROM bids WHERE task_id = ? AND freelancer_email = ?");
-        $dup->bind_param('is', $task_id, $email);
+        $dup = $conn->prepare(
+            "SELECT id FROM bids WHERE task_id = ? AND freelancer_email = ?",
+        );
+        $dup->bind_param("is", $task_id, $email);
         $dup->execute();
         $dup->store_result();
-        $already_bid = $dup->num_rows > 0;   // true means duplicate
+        $already_bid = $dup->num_rows > 0; // true means duplicate
         $dup->close();
 
         if ($already_bid) {
             // Block duplicate — same email can only bid once per task
-            $error = 'You have already submitted a bid on this task.';
+            $error = "You have already submitted a bid on this task.";
         } else {
             // No duplicate found — safe to insert
             $ins = $conn->prepare(
                 "INSERT INTO bids (task_id, freelancer_name, freelancer_email, proposed_price, pitch)
-                 VALUES (?, ?, ?, ?, ?)"
+                 VALUES (?, ?, ?, ?, ?)",
             );
-            $ins->bind_param('issds', $task_id, $name, $email, $price, $pitch);
+            $ins->bind_param("issds", $task_id, $name, $email, $price, $pitch);
 
             if ($ins->execute()) {
-                $success = 'Your bid was submitted successfully! The client will review it.';
+                $success =
+                    "Your bid was submitted successfully! The client will review it.";
             } else {
-                $error = 'Something went wrong. Please try again.';
+                $error = "Something went wrong. Please try again.";
             }
             $ins->close();
         }
@@ -84,16 +87,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $task['status'] === 'open') {
 // Fetch existing bids for this task (public: show count and names only)
 $bids_stmt = $conn->prepare(
     "SELECT freelancer_name, proposed_price, submitted_at, status
-     FROM bids WHERE task_id = ? ORDER BY submitted_at DESC"
+     FROM bids WHERE task_id = ? ORDER BY submitted_at DESC",
 );
-$bids_stmt->bind_param('i', $task_id);
+$bids_stmt->bind_param("i", $task_id);
 $bids_stmt->execute();
 $bids = $bids_stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 $bids_stmt->close();
 
-$page_title  = htmlspecialchars($task['title']);
-$nav_context = 'public';
-require_once 'includes/header.php';
+$page_title = htmlspecialchars($task["title"]);
+$nav_context = "public";
+require_once "includes/header.php";
 ?>
 
 <div class="page-wrap">
@@ -113,44 +116,57 @@ require_once 'includes/header.php';
                         <!-- Title and status badge -->
                         <div class="flex items-center gap-1" style="flex-wrap:wrap; margin-bottom:0.5rem;">
                             <h1 style="font-size:1.4rem; font-weight:700; letter-spacing:-0.02em;">
-                                <?= htmlspecialchars($task['title']) ?>
+                                <?= htmlspecialchars($task["title"]) ?>
                             </h1>
                             <?php
                             // Map status to badge class
                             $status_badges = [
-                                'open'        => 'badge-open',
-                                'in_progress' => 'badge-progress',
-                                'completed'   => 'badge-done',
+                                "open" => "badge-open",
+                                "in_progress" => "badge-progress",
+                                "completed" => "badge-done",
                             ];
-                            $badge_class = $status_badges[$task['status']] ?? 'badge-pending';
+                            $badge_class =
+                                $status_badges[$task["status"]] ??
+                                "badge-pending";
                             $status_labels = [
-                                'open'        => 'Open',
-                                'in_progress' => 'In Progress',
-                                'completed'   => 'Completed',
+                                "open" => "Open",
+                                "in_progress" => "In Progress",
+                                "completed" => "Completed",
                             ];
                             ?>
                             <span class="badge <?= $badge_class ?>">
-                                <?= $status_labels[$task['status']] ?? $task['status'] ?>
+                                <?= $status_labels[$task["status"]] ??
+                                    $task["status"] ?>
                             </span>
                         </div>
 
                         <!-- Meta row: client, category, budget, deadline -->
                         <div style="display:flex; flex-wrap:wrap; gap:1rem; margin-bottom:1.25rem;">
                             <span class="text-sm text-muted">
-                                Posted by <strong><?= htmlspecialchars($task['client_name']) ?></strong>
+                                Posted by <strong><?= htmlspecialchars(
+                                    $task["client_name"],
+                                ) ?></strong>
                             </span>
-                            <span class="badge badge-category"><?= htmlspecialchars($task['category']) ?></span>
+                            <span class="badge badge-category"><?= htmlspecialchars(
+                                $task["category"],
+                            ) ?></span>
                             <span class="text-sm" style="color:var(--success); font-weight:600;">
-                                Budget: $<?= number_format($task['budget'], 2) ?>
+                                Budget: $<?= number_format(
+                                    $task["budget"],
+                                    2,
+                                ) ?>
                             </span>
                             <span class="text-sm text-muted">
-                                Deadline: <?= date('M j, Y', strtotime($task['deadline'])) ?>
+                                Deadline: <?= date(
+                                    "M j, Y",
+                                    strtotime($task["deadline"]),
+                                ) ?>
                             </span>
                         </div>
 
                         <!-- Full task description -->
                         <div style="line-height:1.7; color:var(--text);">
-                            <?= nl2br(htmlspecialchars($task['description'])) ?>
+                            <?= nl2br(htmlspecialchars($task["description"])) ?>
                         </div>
                     </div>
                 </div>
@@ -159,7 +175,9 @@ require_once 'includes/header.php';
                 <?php if (!empty($bids)): ?>
                     <div style="margin-top:1.25rem;">
                         <h3 style="font-size:0.95rem; font-weight:600; margin-bottom:0.75rem;">
-                            <?= count($bids) ?> bid<?= count($bids) != 1 ? 's' : '' ?> submitted
+                            <?= count($bids) ?> bid<?= count($bids) != 1
+     ? "s"
+     : "" ?> submitted
                         </h3>
                         <?php foreach ($bids as $bid): ?>
                             <div style="display:flex; justify-content:space-between; align-items:center;
@@ -167,13 +185,21 @@ require_once 'includes/header.php';
                                         border:1px solid var(--border); border-radius:var(--radius);
                                         margin-bottom:0.5rem;">
                                 <div>
-                                    <span class="font-bold text-sm"><?= htmlspecialchars($bid['freelancer_name']) ?></span>
+                                    <span class="font-bold text-sm"><?= htmlspecialchars(
+                                        $bid["freelancer_name"],
+                                    ) ?></span>
                                     <span class="text-sm text-muted" style="margin-left:0.5rem;">
-                                        $<?= number_format($bid['proposed_price'], 2) ?>
+                                        $<?= number_format(
+                                            $bid["proposed_price"],
+                                            2,
+                                        ) ?>
                                     </span>
                                 </div>
                                 <span class="text-sm text-muted">
-                                    <?= date('M j', strtotime($bid['submitted_at'])) ?>
+                                    <?= date(
+                                        "M j",
+                                        strtotime($bid["submitted_at"]),
+                                    ) ?>
                                 </span>
                             </div>
                         <?php endforeach; ?>
@@ -183,7 +209,7 @@ require_once 'includes/header.php';
 
             <!-- Right: bid submission form -->
             <div>
-                <?php if ($task['status'] !== 'open'): ?>
+                <?php if ($task["status"] !== "open"): ?>
                     <!-- Task no longer accepting bids -->
                     <div class="card">
                         <div class="card-body" style="text-align:center; padding:2rem;">
@@ -195,15 +221,21 @@ require_once 'includes/header.php';
                         <div class="card-header">Submit your bid</div>
                         <div class="card-body">
                             <?php if ($success): ?>
-                                <div class="alert alert-success"><?= htmlspecialchars($success) ?></div>
+                                <div class="alert alert-success"><?= htmlspecialchars(
+                                    $success,
+                                ) ?></div>
                             <?php endif; ?>
                             <?php if ($error): ?>
-                                <div class="alert alert-error"><?= htmlspecialchars($error) ?></div>
+                                <div class="alert alert-error"><?= htmlspecialchars(
+                                    $error,
+                                ) ?></div>
                             <?php endif; ?>
 
                             <?php if (!$success): ?>
                                 <form method="POST" action="">
-                                    <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(generate_csrf_token()) ?>">
+                                    <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(
+                                        generate_csrf_token(),
+                                    ) ?>">
                                     <div class="form-group">
                                         <label class="form-label" for="freelancer_name">Your name</label>
                                         <input
@@ -212,7 +244,9 @@ require_once 'includes/header.php';
                                             name="freelancer_name"
                                             class="form-control"
                                             placeholder="Jane Doe"
-                                            value="<?= htmlspecialchars($_POST['freelancer_name'] ?? '') ?>"
+                                            value="<?= htmlspecialchars(
+                                                $_POST["freelancer_name"] ?? "",
+                                            ) ?>"
                                             required>
                                     </div>
 
@@ -224,7 +258,10 @@ require_once 'includes/header.php';
                                             name="freelancer_email"
                                             class="form-control"
                                             placeholder="you@example.com"
-                                            value="<?= htmlspecialchars($_POST['freelancer_email'] ?? '') ?>"
+                                            value="<?= htmlspecialchars(
+                                                $_POST["freelancer_email"] ??
+                                                    "",
+                                            ) ?>"
                                             required>
                                         <p class="form-hint">The client will contact you here.</p>
                                     </div>
@@ -239,9 +276,14 @@ require_once 'includes/header.php';
                                             placeholder="e.g. 150"
                                             min="1"
                                             step="0.01"
-                                            value="<?= htmlspecialchars($_POST['proposed_price'] ?? '') ?>"
+                                            value="<?= htmlspecialchars(
+                                                $_POST["proposed_price"] ?? "",
+                                            ) ?>"
                                             required>
-                                        <p class="form-hint">Client budget: $<?= number_format($task['budget'], 2) ?></p>
+                                        <p class="form-hint">Client budget: $<?= number_format(
+                                            $task["budget"],
+                                            2,
+                                        ) ?></p>
                                     </div>
 
                                     <div class="form-group">
@@ -251,7 +293,9 @@ require_once 'includes/header.php';
                                             name="pitch"
                                             class="form-control"
                                             placeholder="Briefly explain your experience and approach..."
-                                            required><?= htmlspecialchars($_POST['pitch'] ?? '') ?></textarea>
+                                            required><?= htmlspecialchars(
+                                                $_POST["pitch"] ?? "",
+                                            ) ?></textarea>
                                     </div>
 
                                     <button type="submit" class="btn btn-primary" style="width:100%;">
@@ -268,4 +312,4 @@ require_once 'includes/header.php';
     </div>
 </div>
 
-<?php require_once 'includes/footer.php'; ?>
+<?php require_once "includes/footer.php"; ?>
