@@ -1,90 +1,109 @@
 <?php
 // Client: edit an existing task (only allowed while status is 'open')
 
-require_once '../includes/auth_client.php';
-require_once '../includes/db.php';
+require_once "../includes/auth_client.php";
+require_once "../includes/db.php";
 
-$client_id = $_SESSION['client_id'];
-$task_id   = (int)($_GET['id'] ?? 0);
+$client_id = $_SESSION["client_id"];
+$task_id = (int) ($_GET["id"] ?? 0);
 
 if ($task_id <= 0) {
-    header('Location: /bidboard/client/dashboard.php');
+    header("Location: /bidboard/client/dashboard.php");
     exit();
 }
 
 // Fetch task — verify it belongs to this client and is still open
-$stmt = $conn->prepare("SELECT * FROM tasks WHERE id = ? AND client_id = ? AND status = 'open'");
-$stmt->bind_param('ii', $task_id, $client_id);
+$stmt = $conn->prepare(
+    "SELECT * FROM tasks WHERE id = ? AND client_id = ? AND status = 'open'",
+);
+$stmt->bind_param("ii", $task_id, $client_id);
 $stmt->execute();
 $task = $stmt->get_result()->fetch_assoc();
 $stmt->close();
 
 if (!$task) {
     // Either doesn't exist, not theirs, or no longer open
-    header('Location: /bidboard/client/dashboard.php');
+    header("Location: /bidboard/client/dashboard.php");
     exit();
 }
 
-$error   = '';
-$success = '';
+$error = "";
+$success = "";
 
 $categories = [
-    'Web Development',
-    'Mobile Development',
-    'Design / UI-UX',
-    'Writing / Content',
-    'Data Entry',
-    'Digital Marketing',
-    'Video / Animation',
-    'Translation',
-    'Accounting / Finance',
-    'Other',
+    "Web Development",
+    "Mobile Development",
+    "Design / UI-UX",
+    "Writing / Content",
+    "Data Entry",
+    "Digital Marketing",
+    "Video / Animation",
+    "Translation",
+    "Accounting / Finance",
+    "Other",
 ];
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    if (!verify_csrf_token($_POST['csrf_token'] ?? '')) {
-        die('Invalid CSRF token. Please go back and try again.');
+if ($_SERVER["REQUEST_METHOD"] === "POST") {
+    if (!verify_csrf_token($_POST["csrf_token"] ?? "")) {
+        die("Invalid CSRF token. Please go back and try again.");
     }
-    $title       = trim($_POST['title']       ?? '');
-    $description = trim($_POST['description'] ?? '');
-    $category    = trim($_POST['category']    ?? '');
-    $budget      = trim($_POST['budget']      ?? '');
-    $deadline    = trim($_POST['deadline']    ?? '');
+    $title = trim($_POST["title"] ?? "");
+    $description = trim($_POST["description"] ?? "");
+    $category = trim($_POST["category"] ?? "");
+    $budget = trim($_POST["budget"] ?? "");
+    $deadline = trim($_POST["deadline"] ?? "");
 
     // Validation
-    if ($title === '' || $description === '' || $category === '' || $budget === '' || $deadline === '') {
-        $error = 'All fields are required.';
+    if (
+        $title === "" ||
+        $description === "" ||
+        $category === "" ||
+        $budget === "" ||
+        $deadline === ""
+    ) {
+        $error = "All fields are required.";
+    } elseif (!in_array($category, $categories, true)) {
+        $error = "Invalid Category Entry";
     } elseif (!is_numeric($budget) || $budget <= 0) {
-        $error = 'Enter a valid budget amount.';
+        $error = "Enter a valid budget amount.";
     } elseif (!strtotime($deadline) || strtotime($deadline) <= time()) {
-        $error = 'Deadline must be a future date.';
+        $error = "Deadline must be a future date.";
     } else {
         // Update the task
         $upd = $conn->prepare(
             "UPDATE tasks SET title = ?, description = ?, category = ?, budget = ?, deadline = ?
-     WHERE id = ? AND client_id = ? AND status = 'open'"
+     WHERE id = ? AND client_id = ? AND status = 'open'",
         );
-        $budget_f = (float)$budget;
-        $upd->bind_param('sssssii', $title, $description, $category, $budget_f, $deadline, $task_id, $client_id);
+        $budget_f = (float) $budget;
+        $upd->bind_param(
+            "sssdsii",
+            $title,
+            $description,
+            $category,
+            $budget_f,
+            $deadline,
+            $task_id,
+            $client_id,
+        );
 
         if ($upd->execute()) {
-            $success = 'Task updated successfully.';
+            $success = "Task updated successfully.";
             // Refresh local task var so form reflects saved values
-            $task['title']       = $title;
-            $task['description'] = $description;
-            $task['category']    = $category;
-            $task['budget']      = $budget;
-            $task['deadline']    = $deadline;
+            $task["title"] = $title;
+            $task["description"] = $description;
+            $task["category"] = $category;
+            $task["budget"] = $budget;
+            $task["deadline"] = $deadline;
         } else {
-            $error = 'Update failed. Please try again.';
+            $error = "Update failed. Please try again.";
         }
         $upd->close();
     }
 }
 
-$page_title  = 'Edit Task';
-$nav_context = 'client';
-require_once '../includes/header.php';
+$page_title = "Edit Task";
+$nav_context = "client";
+require_once "../includes/header.php";
 ?>
 
 <div class="page-wrap">
@@ -96,7 +115,9 @@ require_once '../includes/header.php';
         </div>
 
         <?php if ($success): ?>
-            <div class="alert alert-success"><?= htmlspecialchars($success) ?></div>
+            <div class="alert alert-success"><?= htmlspecialchars(
+                $success,
+            ) ?></div>
         <?php endif; ?>
         <?php if ($error): ?>
             <div class="alert alert-error"><?= htmlspecialchars($error) ?></div>
@@ -105,7 +126,9 @@ require_once '../includes/header.php';
         <div class="card">
             <div class="card-body">
                 <form method="POST" action="">
-                    <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(generate_csrf_token()) ?>">
+                    <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(
+                        generate_csrf_token(),
+                    ) ?>">
 
                     <div class="form-group">
                         <label class="form-label" for="title">Task title</label>
@@ -114,7 +137,7 @@ require_once '../includes/header.php';
                             id="title"
                             name="title"
                             class="form-control"
-                            value="<?= htmlspecialchars($task['title']) ?>"
+                            value="<?= htmlspecialchars($task["title"]) ?>"
                             required>
                     </div>
 
@@ -125,7 +148,9 @@ require_once '../includes/header.php';
                             name="description"
                             class="form-control"
                             style="min-height:140px;"
-                            required><?= htmlspecialchars($task['description']) ?></textarea>
+                            required><?= htmlspecialchars(
+                                $task["description"],
+                            ) ?></textarea>
                     </div>
 
                     <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
@@ -136,7 +161,9 @@ require_once '../includes/header.php';
                                 <?php foreach ($categories as $cat): ?>
                                     <option
                                         value="<?= htmlspecialchars($cat) ?>"
-                                        <?= $task['category'] === $cat ? 'selected' : '' ?>>
+                                        <?= $task["category"] === $cat
+                                            ? "selected"
+                                            : "" ?>>
                                         <?= htmlspecialchars($cat) ?>
                                     </option>
                                 <?php endforeach; ?>
@@ -152,7 +179,7 @@ require_once '../includes/header.php';
                                 class="form-control"
                                 min="1"
                                 step="0.01"
-                                value="<?= htmlspecialchars($task['budget']) ?>"
+                                value="<?= htmlspecialchars($task["budget"]) ?>"
                                 required>
                         </div>
                     </div>
@@ -164,8 +191,8 @@ require_once '../includes/header.php';
                             id="deadline"
                             name="deadline"
                             class="form-control"
-                            min="<?= date('Y-m-d', strtotime('+1 day')) ?>"
-                            value="<?= htmlspecialchars($task['deadline']) ?>"
+                            min="<?= date("Y-m-d", strtotime("+1 day")) ?>"
+                            value="<?= htmlspecialchars($task["deadline"]) ?>"
                             required>
                     </div>
 
@@ -181,4 +208,4 @@ require_once '../includes/header.php';
     </div>
 </div>
 
-<?php require_once '../includes/footer.php'; ?>
+<?php require_once "../includes/footer.php"; ?>

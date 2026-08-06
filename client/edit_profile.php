@@ -1,86 +1,100 @@
 <?php
 // Client: edit profile — update name, email, and optionally password
 
-require_once '../includes/auth_client.php';
-require_once '../includes/db.php';
+require_once "../includes/auth_client.php";
+require_once "../includes/db.php";
 
-$client_id = $_SESSION['client_id'];
+$client_id = $_SESSION["client_id"];
 
 // Fetch current client data
 $stmt = $conn->prepare("SELECT id, name, email FROM clients WHERE id = ?");
-$stmt->bind_param('i', $client_id);
+$stmt->bind_param("i", $client_id);
 $stmt->execute();
 $client = $stmt->get_result()->fetch_assoc();
 $stmt->close();
 
-$error   = '';
-$success = '';
+$error = "";
+$success = "";
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    if (!verify_csrf_token($_POST['csrf_token'] ?? '')) {
-        die('Invalid CSRF token. Please go back and try again.');
+if ($_SERVER["REQUEST_METHOD"] === "POST") {
+    if (!verify_csrf_token($_POST["csrf_token"] ?? "")) {
+        die("Invalid CSRF token. Please go back and try again.");
     }
-    $name        = trim($_POST['name']         ?? '');
-    $email       = trim($_POST['email']        ?? '');
-    $new_pass    = trim($_POST['new_password'] ?? '');    // optional — blank means don't change
-    $confirm     = trim($_POST['confirm']      ?? '');
-    $current_raw = trim($_POST['current_password'] ?? ''); // required to confirm identity
+    $name = trim($_POST["name"] ?? "");
+    $email = trim($_POST["email"] ?? "");
+    $new_pass = $_POST["new_password"] ?? ""; // optional — blank means don't change
+    $confirm = $_POST["confirm"] ?? "";
+    $current_raw = trim($_POST["current_password"] ?? ""); // required to confirm identity
 
     // Basic field validation
-    if ($name === '' || $email === '') {
-        $error = 'Name and email are required.';
+    if ($name === "" || $email === "") {
+        $error = "Name and email are required.";
     } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-        $error = 'Enter a valid email address.';
-    } elseif ($current_raw === '') {
-        $error = 'Enter your current password to save changes.';
+        $error = "Enter a valid email address.";
+    } elseif ($current_raw === "") {
+        $error = "Enter your current password to save changes.";
     } else {
         // Verify the current password before allowing any change
-        $pass_stmt = $conn->prepare("SELECT password FROM clients WHERE id = ?");
-        $pass_stmt->bind_param('i', $client_id);
+        $pass_stmt = $conn->prepare(
+            "SELECT password FROM clients WHERE id = ?",
+        );
+        $pass_stmt->bind_param("i", $client_id);
         $pass_stmt->execute();
         $row = $pass_stmt->get_result()->fetch_assoc();
         $pass_stmt->close();
 
-        if (!password_verify($current_raw, $row['password'])) {
-            $error = 'Current password is incorrect.';
+        if (!password_verify($current_raw, $row["password"])) {
+            $error = "Current password is incorrect.";
         } else {
             // Check if new email is taken by another client
-            $email_check = $conn->prepare("SELECT id FROM clients WHERE email = ? AND id != ?");
-            $email_check->bind_param('si', $email, $client_id);
+            $email_check = $conn->prepare(
+                "SELECT id FROM clients WHERE email = ? AND id != ?",
+            );
+            $email_check->bind_param("si", $email, $client_id);
             $email_check->execute();
             $email_check->store_result();
             $email_taken = $email_check->num_rows > 0;
             $email_check->close();
 
             if ($email_taken) {
-                $error = 'That email is already used by another account.';
-            } elseif ($new_pass !== '' && strlen($new_pass) < 6) {
-                $error = 'New password must be at least 6 characters.';
-            } elseif ($new_pass !== '' && $new_pass !== $confirm) {
-                $error = 'New passwords do not match.';
+                $error = "That email is already used by another account.";
+            } elseif ($new_pass !== "" && strlen($new_pass) < 6) {
+                $error = "New password must be at least 6 characters.";
+            } elseif ($new_pass !== "" && $new_pass !== $confirm) {
+                $error = "New passwords do not match.";
             } else {
                 // All good — build the update query
-                if ($new_pass !== '') {
+                if ($new_pass !== "") {
                     // Update name, email, and password
                     $hashed = password_hash($new_pass, PASSWORD_BCRYPT);
-                    $upd    = $conn->prepare("UPDATE clients SET name = ?, email = ?, password = ? WHERE id = ?");
-                    $upd->bind_param('sssi', $name, $email, $hashed, $client_id);
+                    $upd = $conn->prepare(
+                        "UPDATE clients SET name = ?, email = ?, password = ? WHERE id = ?",
+                    );
+                    $upd->bind_param(
+                        "sssi",
+                        $name,
+                        $email,
+                        $hashed,
+                        $client_id,
+                    );
                 } else {
                     // Update only name and email, leave password unchanged
-                    $upd = $conn->prepare("UPDATE clients SET name = ?, email = ? WHERE id = ?");
-                    $upd->bind_param('ssi', $name, $email, $client_id);
+                    $upd = $conn->prepare(
+                        "UPDATE clients SET name = ?, email = ? WHERE id = ?",
+                    );
+                    $upd->bind_param("ssi", $name, $email, $client_id);
                 }
 
                 if ($upd->execute()) {
                     // Update the session name so navbar reflects change
-                    $_SESSION['client_name'] = $name;
-                    $success = 'Profile updated successfully.';
+                    $_SESSION["client_name"] = $name;
+                    $success = "Profile updated successfully.";
 
                     // Refresh local $client var so the form shows updated values
-                    $client['name']  = $name;
-                    $client['email'] = $email;
+                    $client["name"] = $name;
+                    $client["email"] = $email;
                 } else {
-                    $error = 'Update failed. Please try again.';
+                    $error = "Update failed. Please try again.";
                 }
                 $upd->close();
             }
@@ -88,9 +102,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-$page_title  = 'Edit Profile';
-$nav_context = 'client';
-require_once '../includes/header.php';
+$page_title = "Edit Profile";
+$nav_context = "client";
+require_once "../includes/header.php";
 ?>
 
 <div class="page-wrap">
@@ -102,7 +116,9 @@ require_once '../includes/header.php';
         </div>
 
         <?php if ($success): ?>
-            <div class="alert alert-success"><?= htmlspecialchars($success) ?></div>
+            <div class="alert alert-success"><?= htmlspecialchars(
+                $success,
+            ) ?></div>
         <?php endif; ?>
         <?php if ($error): ?>
             <div class="alert alert-error"><?= htmlspecialchars($error) ?></div>
@@ -111,7 +127,9 @@ require_once '../includes/header.php';
         <div class="card">
             <div class="card-body">
                 <form method="POST" action="">
-                    <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(generate_csrf_token()) ?>">
+                    <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(
+                        generate_csrf_token(),
+                    ) ?>">
 
                     <!-- Name -->
                     <div class="form-group">
@@ -121,7 +139,7 @@ require_once '../includes/header.php';
                             id="name"
                             name="name"
                             class="form-control"
-                            value="<?= htmlspecialchars($client['name']) ?>"
+                            value="<?= htmlspecialchars($client["name"]) ?>"
                             required>
                     </div>
 
@@ -133,7 +151,7 @@ require_once '../includes/header.php';
                             id="email"
                             name="email"
                             class="form-control"
-                            value="<?= htmlspecialchars($client['email']) ?>"
+                            value="<?= htmlspecialchars($client["email"]) ?>"
                             required>
                     </div>
 
@@ -198,4 +216,4 @@ require_once '../includes/header.php';
     </div>
 </div>
 
-<?php require_once '../includes/footer.php'; ?>
+<?php require_once "../includes/footer.php"; ?>
