@@ -1,25 +1,57 @@
-name: Freelance-Bidding-System CI
+name: Bidboard PHP CI
 
 on:
   pull_request:
     branches:
       - main
+
   push:
     branches:
       - main
 
 jobs:
-  lint:
+  php-quality-check:
+    name: PHP Quality Checks
     runs-on: ubuntu-latest
+
     steps:
+      # Download repository
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up PHP
+      # Install PHP
+      - name: Setup PHP 8.2
         uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.2'
+          php-version: "8.2"
+          extensions: mysqli
 
-      - name: Lint PHP files for syntax errors
+      # Verify PHP installation
+      - name: Check PHP version
+        run: php -v
+
+      # Check every PHP file syntax
+      - name: PHP Syntax Check
         run: |
-          find . -name "*.php" -print0 | xargs -0 -n1 php -l
+          find . -name "*.php" -print0 | xargs -0 -r -n1 php -l
+
+      # Check required project structure
+      - name: Verify Project Structure
+        run: |
+          test -f index.php
+          test -f task.php
+          test -f bid_status.php
+          test -f includes/db.php
+          test -f sql/bidboard.sql
+
+          test -d auth
+          test -d client
+          test -d admin
+          test -d actions
+          test -d includes
+
+      # Check for accidental debugging code
+      - name: Check Debug Statements
+        run: |
+          ! grep -R "var_dump(" --include="*.php" .
+          ! grep -R "print_r(" --include="*.php" .
