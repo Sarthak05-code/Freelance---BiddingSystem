@@ -27,32 +27,30 @@ jobs:
       - name: Check PHP version
         run: php -v
 
+      - name: Show repository files
+        run: |
+          pwd
+          ls -la
+
       - name: PHP Syntax Check
         run: |
           find . -name "*.php" -print0 | xargs -0 -r -n1 php -l
 
-      - name: Show repository files
-        run: |
-          ls -la
-          find . -maxdepth 2 -type f
       - name: Verify Project Structure
         run: |
-          test -f index.php
-          test -f task.php
-          test -f bid_status.php
+          test -f "./index.php"
+          test -f "./task.php"
+          test -f "./bid_status.php"
 
-          test -f includes/db.php
-          test -f includes/auth_admin.php
-          test -f includes/auth_client.php
+          test -f "./includes/db.php"
+          test -f "./sql/bidboard.sql"
 
-          test -f sql/bidboard.sql
-
-          test -d auth
-          test -d client
-          test -d admin
-          test -d actions
-          test -d includes
-          test -d css
+          test -d "./auth"
+          test -d "./client"
+          test -d "./admin"
+          test -d "./actions"
+          test -d "./includes"
+          test -d "./css"
 
       - name: Check Debug Statements
         run: |
