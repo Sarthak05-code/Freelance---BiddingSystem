@@ -31,6 +31,10 @@ jobs:
         run: |
           find . -name "*.php" -print0 | xargs -0 -r -n1 php -l
 
+      - name: Show repository files
+        run: |
+          ls -la
+          find . -maxdepth 2 -type f
       - name: Verify Project Structure
         run: |
           test -f index.php
@@ -54,7 +58,3 @@ jobs:
         run: |
           ! grep -R "var_dump(" --include="*.php" .
           ! grep -R "print_r(" --include="*.php" .
-      - name: Show repository files
-        run: |
-          ls -la
-          find . -maxdepth 2 -type f
