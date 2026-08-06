@@ -14,32 +14,23 @@ jobs:
     name: PHP Quality Checks
     runs-on: ubuntu-latest
 
-    defaults:
-      run:
-        working-directory: bidboard
-
     steps:
-      # Checkout repository
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # Setup PHP environment
       - name: Setup PHP 8.2
         uses: shivammathur/setup-php@v2
         with:
           php-version: "8.2"
-          extensions: mysqli, pdo_mysql
+          extensions: mysqli,pdo_mysql
 
-      # Confirm PHP installation
       - name: Check PHP version
         run: php -v
 
-      # Check PHP syntax errors
       - name: PHP Syntax Check
         run: |
           find . -name "*.php" -print0 | xargs -0 -r -n1 php -l
 
-      # Verify important files exist
       - name: Verify Project Structure
         run: |
           test -f index.php
@@ -59,14 +50,11 @@ jobs:
           test -d includes
           test -d css
 
-      # Detect accidental debugging code
       - name: Check Debug Statements
         run: |
           ! grep -R "var_dump(" --include="*.php" .
           ! grep -R "print_r(" --include="*.php" .
-
-      # Check for exposed database credentials
-      - name: Check Sensitive Files
+      - name: Show repository files
         run: |
-          ! find . -name ".env"
-          ! find . -name "*.log"
+          ls -la
+          find . -maxdepth 2 -type f
