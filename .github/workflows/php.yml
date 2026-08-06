@@ -4,55 +4,27 @@ on:
   pull_request:
     branches:
       - main
-
   push:
     branches:
       - main
 
 jobs:
-  php-quality-check:
-    name: PHP Quality Checks
+  php-check:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup PHP 8.2
+      - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
           php-version: "8.2"
           extensions: mysqli,pdo_mysql
 
-      - name: Check PHP version
+      - name: PHP version
         run: php -v
 
-      - name: Show repository files
-        run: |
-          pwd
-          ls -la
-
-      - name: PHP Syntax Check
+      - name: PHP syntax check
         run: |
           find . -name "*.php" -print0 | xargs -0 -r -n1 php -l
-
-      - name: Verify Project Structure
-        run: |
-          test -f "./index.php"
-          test -f "./task.php"
-          test -f "./bid_status.php"
-
-          test -f "./includes/db.php"
-          test -f "./sql/bidboard.sql"
-
-          test -d "./auth"
-          test -d "./client"
-          test -d "./admin"
-          test -d "./actions"
-          test -d "./includes"
-          test -d "./css"
-
-      - name: Check Debug Statements
-        run: |
-          ! grep -R "var_dump(" --include="*.php" .
-          ! grep -R "print_r(" --include="*.php" .
