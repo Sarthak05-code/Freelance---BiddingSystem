@@ -6,6 +6,8 @@
 session_name('bidboard_admin');
 session_start();
 
+
+
 // If not logged in as admin, redirect to admin login
 if (!isset($_SESSION['admin_id'])) {
     header('Location: /bidboard/auth/admin_login.php');

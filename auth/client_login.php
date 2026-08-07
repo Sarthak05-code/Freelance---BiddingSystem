@@ -19,7 +19,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         die("Invalid CSRF token. Please go back and try again.");
     }
     $email = trim($_POST["email"] ?? "");
-    // removal of trimmed password. 
+    // removal of trimmed password.
     $password = $_POST["password"] ?? "";
 
     if ($email === "" || $password === "") {
@@ -43,6 +43,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             $error = "Incorrect password.";
         } else {
             // Login successful — store in session
+            session_regenerate_id(true);
             $_SESSION["client_id"] = $client["id"];
             $_SESSION["client_name"] = $client["name"];
             header("Location: /bidboard/client/dashboard.php");
