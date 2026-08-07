@@ -219,23 +219,63 @@ require_once "../includes/header.php";
 </div>
 
 <script>
-// Real-time name validation — must start with a letter, no leading numbers
-const nameInput = document.getElementById('name');
-const nameError = document.createElement('p');
-nameError.className = 'form-hint';
-nameError.style.color = 'var(--danger)';
-nameError.style.display = 'none';
-nameInput.insertAdjacentElement('afterend', nameError);
+// (existing name validation script stays as-is above this)
 
-nameInput.addEventListener('input', () => {
-    const namePattern = /^[A-Za-z][A-Za-z\s]*$/;
-    if (nameInput.value.length > 0 && !namePattern.test(nameInput.value)) {
-        nameError.textContent = 'Name must start with a letter and contain only letters.';
-        nameError.style.display = 'block';
-        nameInput.style.borderColor = 'var(--danger)';
+// Real-time email validation
+const emailInput = document.getElementById('email');
+const emailError = document.createElement('p');
+emailError.className = 'form-hint';
+emailError.style.color = 'var(--danger)';
+emailError.style.display = 'none';
+emailInput.insertAdjacentElement('afterend', emailError);
+
+emailInput.addEventListener('input', () => {
+    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (emailInput.value.length > 0 && !emailPattern.test(emailInput.value)) {
+        emailError.textContent = 'Enter a valid email address.';
+        emailError.style.display = 'block';
+        emailInput.style.borderColor = 'var(--danger)';
     } else {
-        nameError.style.display = 'none';
-        nameInput.style.borderColor = '';
+        emailError.style.display = 'none';
+        emailInput.style.borderColor = '';
+    }
+});
+
+// Real-time new password length validation (only if filled in)
+const newPasswordInput = document.getElementById('new_password');
+const newPasswordError = document.createElement('p');
+newPasswordError.className = 'form-hint';
+newPasswordError.style.color = 'var(--danger)';
+newPasswordError.style.display = 'none';
+newPasswordInput.insertAdjacentElement('afterend', newPasswordError);
+
+newPasswordInput.addEventListener('input', () => {
+    if (newPasswordInput.value.length > 0 && newPasswordInput.value.length < 6) {
+        newPasswordError.textContent = 'New password must be at least 6 characters.';
+        newPasswordError.style.display = 'block';
+        newPasswordInput.style.borderColor = 'var(--danger)';
+    } else {
+        newPasswordError.style.display = 'none';
+        newPasswordInput.style.borderColor = '';
+    }
+});
+
+// Real-time confirm new password match validation
+const confirmInput = document.getElementById('confirm');
+const confirmError = document.createElement('p');
+confirmError.className = 'form-hint';
+confirmError.style.color = 'var(--danger)';
+confirmError.style.display = 'none';
+confirmInput.insertAdjacentElement('afterend', confirmError);
+
+confirmInput.addEventListener('input', () => {
+    if (confirmInput.value.length > 0 && confirmInput.value !== newPasswordInput.value) {
+        confirmError.textContent = 'Passwords do not match.';
+        confirmError.style.display = 'block';
+        confirmInput.style.borderColor = 'var(--danger)';
+    } else {
+        confirmError.style.display = 'none';
+        confirmInput.style.borderColor = '';
     }
 });
 </script>

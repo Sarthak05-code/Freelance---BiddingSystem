@@ -336,6 +336,50 @@ if (freelancerNameInput) {
         }
     });
 }
+
+// Real-time freelancer email validation
+const freelancerEmailInput = document.getElementById('freelancer_email');
+if (freelancerEmailInput) {
+    const freelancerEmailError = document.createElement('p');
+    freelancerEmailError.className = 'form-hint';
+    freelancerEmailError.style.color = 'var(--danger)';
+    freelancerEmailError.style.display = 'none';
+    freelancerEmailInput.insertAdjacentElement('afterend', freelancerEmailError);
+
+    freelancerEmailInput.addEventListener('input', () => {
+        const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (freelancerEmailInput.value.length > 0 && !emailPattern.test(freelancerEmailInput.value)) {
+            freelancerEmailError.textContent = 'Enter a valid email address.';
+            freelancerEmailError.style.display = 'block';
+            freelancerEmailInput.style.borderColor = 'var(--danger)';
+        } else {
+            freelancerEmailError.style.display = 'none';
+            freelancerEmailInput.style.borderColor = '';
+        }
+    });
+}
+
+// Real-time proposed price validation
+const priceInput = document.getElementById('proposed_price');
+if (priceInput) {
+    const priceError = document.createElement('p');
+    priceError.className = 'form-hint';
+    priceError.style.color = 'var(--danger)';
+    priceError.style.display = 'none';
+    priceInput.insertAdjacentElement('afterend', priceError);
+
+    priceInput.addEventListener('input', () => {
+        const value = parseFloat(priceInput.value);
+        if (priceInput.value.length > 0 && (isNaN(value) || value <= 0)) {
+            priceError.textContent = 'Enter a valid bid amount greater than 0.';
+            priceError.style.display = 'block';
+            priceInput.style.borderColor = 'var(--danger)';
+        } else {
+            priceError.style.display = 'none';
+            priceInput.style.borderColor = '';
+        }
+    });
+}
 </script>
 
 <?php require_once "includes/footer.php"; ?>

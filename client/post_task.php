@@ -186,5 +186,26 @@ require_once "../includes/header.php";
 
     </div>
 </div>
+<script>
+// Real-time budget validation
+const budgetInput = document.getElementById('budget');
+const budgetError = document.createElement('p');
+budgetError.className = 'form-hint';
+budgetError.style.color = 'var(--danger)';
+budgetError.style.display = 'none';
+budgetInput.insertAdjacentElement('afterend', budgetError);
+
+budgetInput.addEventListener('input', () => {
+    const value = parseFloat(budgetInput.value);
+    if (budgetInput.value.length > 0 && (isNaN(value) || value <= 0)) {
+        budgetError.textContent = 'Enter a valid budget greater than 0.';
+        budgetError.style.display = 'block';
+        budgetInput.style.borderColor = 'var(--danger)';
+    } else {
+        budgetError.style.display = 'none';
+        budgetInput.style.borderColor = '';
+    }
+});
+</script>
 
 <?php require_once "../includes/footer.php"; ?>

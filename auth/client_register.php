@@ -166,6 +166,64 @@ nameInput.addEventListener('input', () => {
         nameInput.style.borderColor = '';
     }
 });
+
+// Real-time email validation
+const emailInput = document.getElementById('email');
+const emailError = document.createElement('p');
+emailError.className = 'form-hint';
+emailError.style.color = 'var(--danger)';
+emailError.style.display = 'none';
+emailInput.insertAdjacentElement('afterend', emailError);
+
+emailInput.addEventListener('input', () => {
+    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (emailInput.value.length > 0 && !emailPattern.test(emailInput.value)) {
+        emailError.textContent = 'Enter a valid email address.';
+        emailError.style.display = 'block';
+        emailInput.style.borderColor = 'var(--danger)';
+    } else {
+        emailError.style.display = 'none';
+        emailInput.style.borderColor = '';
+    }
+});
+
+// Real-time password length validation
+const passwordInput = document.getElementById('password');
+const passwordError = document.createElement('p');
+passwordError.className = 'form-hint';
+passwordError.style.color = 'var(--danger)';
+passwordError.style.display = 'none';
+passwordInput.insertAdjacentElement('afterend', passwordError);
+
+passwordInput.addEventListener('input', () => {
+    if (passwordInput.value.length > 0 && passwordInput.value.length < 6) {
+        passwordError.textContent = 'Password must be at least 6 characters.';
+        passwordError.style.display = 'block';
+        passwordInput.style.borderColor = 'var(--danger)';
+    } else {
+        passwordError.style.display = 'none';
+        passwordInput.style.borderColor = '';
+    }
+});
+
+// Real-time confirm password match validation
+const confirmInput = document.getElementById('confirm');
+const confirmError = document.createElement('p');
+confirmError.className = 'form-hint';
+confirmError.style.color = 'var(--danger)';
+confirmError.style.display = 'none';
+confirmInput.insertAdjacentElement('afterend', confirmError);
+
+confirmInput.addEventListener('input', () => {
+    if (confirmInput.value.length > 0 && confirmInput.value !== passwordInput.value) {
+        confirmError.textContent = 'Passwords do not match.';
+        confirmError.style.display = 'block';
+        confirmInput.style.borderColor = 'var(--danger)';
+    } else {
+        confirmError.style.display = 'none';
+        confirmInput.style.borderColor = '';
+    }
+});
 </script>
 
 <?php require_once "../includes/footer.php"; ?>
