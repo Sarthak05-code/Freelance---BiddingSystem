@@ -47,6 +47,8 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && $task["status"] === "open") {
     // Validation
     if ($name === "" || $email === "" || $price === "" || $pitch === "") {
         $error = "All fields are required.";
+    } elseif (!preg_match('/^[A-Za-z][A-Za-z\s]*$/', $name)) {
+        $error = "Name must start with a letter and contain only letters.";
     } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
         $error = "Enter a valid email address.";
     } elseif (!is_numeric($price) || $price <= 0) {
@@ -311,5 +313,29 @@ require_once "includes/header.php";
         </div>
     </div>
 </div>
+
+<script>
+// Real-time name validation — must start with a letter, no leading numbers
+const freelancerNameInput = document.getElementById('freelancer_name');
+if (freelancerNameInput) {
+    const freelancerNameError = document.createElement('p');
+    freelancerNameError.className = 'form-hint';
+    freelancerNameError.style.color = 'var(--danger)';
+    freelancerNameError.style.display = 'none';
+    freelancerNameInput.insertAdjacentElement('afterend', freelancerNameError);
+
+    freelancerNameInput.addEventListener('input', () => {
+        const namePattern = /^[A-Za-z][A-Za-z\s]*$/;
+        if (freelancerNameInput.value.length > 0 && !namePattern.test(freelancerNameInput.value)) {
+            freelancerNameError.textContent = 'Name must start with a letter and contain only letters.';
+            freelancerNameError.style.display = 'block';
+            freelancerNameInput.style.borderColor = 'var(--danger)';
+        } else {
+            freelancerNameError.style.display = 'none';
+            freelancerNameInput.style.borderColor = '';
+        }
+    });
+}
+</script>
 
 <?php require_once "includes/footer.php"; ?>

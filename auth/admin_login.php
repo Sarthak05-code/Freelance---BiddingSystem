@@ -101,4 +101,26 @@ require_once "../includes/header.php";
     </div>
 </div>
 
+<script>
+// Real-time name validation — must start with a letter, no leading numbers
+const nameInput = document.getElementById('name');
+const nameError = document.createElement('p');
+nameError.className = 'form-hint';
+nameError.style.color = 'var(--danger)';
+nameError.style.display = 'none';
+nameInput.insertAdjacentElement('afterend', nameError);
+
+nameInput.addEventListener('input', () => {
+    const namePattern = /^[A-Za-z][A-Za-z\s]*$/;
+    if (nameInput.value.length > 0 && !namePattern.test(nameInput.value)) {
+        nameError.textContent = 'Name must start with a letter and contain only letters.';
+        nameError.style.display = 'block';
+        nameInput.style.borderColor = 'var(--danger)';
+    } else {
+        nameError.style.display = 'none';
+        nameInput.style.borderColor = '';
+    }
+});
+</script>
+
 <?php require_once "../includes/footer.php"; ?>
