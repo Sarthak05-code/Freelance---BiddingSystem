@@ -1,56 +1,58 @@
 <?php
 // Public homepage — lists all open tasks, no login required
 
-require_once 'includes/db.php';
+require_once "includes/db.php";
 
 // Get filter values from URL query string
-$search   = trim($_GET['search']   ?? '');   // keyword search
-$category = trim($_GET['category'] ?? '');   // filter by category
+$search = trim($_GET["search"] ?? ""); // keyword search
+$category = trim($_GET["category"] ?? ""); // filter by category
 
 // Build query dynamically based on active filters
-$sql    = "SELECT t.*, c.name AS client_name,
+$sql = "SELECT t.*, c.name AS client_name,
                   (SELECT COUNT(*) FROM bids b WHERE b.task_id = t.id) AS bid_count
            FROM tasks t
            JOIN clients c ON t.client_id = c.id
-           WHERE t.status = 'open'";   // only show open tasks publicly
+           WHERE t.status = 'open'"; // only show open tasks publicly
 
-$params = [];    // values for prepared statement
-$types  = '';    // type string for bind_param
+$params = []; // values for prepared statement
+$types = ""; // type string for bind_param
 
 // Add keyword search if provided
-if ($search !== '') {
-    $sql     .= " AND (t.title LIKE ? OR t.description LIKE ?)";
-    $like     = '%' . $search . '%';
+if ($search !== "") {
+    $sql .= " AND (t.title LIKE ? OR t.description LIKE ?)";
+    $like = "%" . $search . "%";
     $params[] = $like;
     $params[] = $like;
-    $types   .= 'ss';
+    $types .= "ss";
 }
 
 // Add category filter if provided
-if ($category !== '') {
-    $sql     .= " AND t.category = ?";
+if ($category !== "") {
+    $sql .= " AND t.category = ?";
     $params[] = $category;
-    $types   .= 's';
+    $types .= "s";
 }
 
-$sql .= " ORDER BY t.created_at DESC";   // newest tasks first
+$sql .= " ORDER BY t.created_at DESC"; // newest tasks first
 
 // Execute query
 $stmt = $conn->prepare($sql);
 if ($params) {
-    $stmt->bind_param($types, ...$params);   // spread array into bind_param
+    $stmt->bind_param($types, ...$params); // spread array into bind_param
 }
 $stmt->execute();
-$tasks = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);   // fetch all as array
+$tasks = $stmt->get_result()->fetch_all(MYSQLI_ASSOC); // fetch all as array
 $stmt->close();
 
 // Get distinct categories for the filter dropdown
-$cats_result = $conn->query("SELECT DISTINCT category FROM tasks WHERE status = 'open' ORDER BY category");
-$categories  = $cats_result->fetch_all(MYSQLI_ASSOC);
+$cats_result = $conn->query(
+    "SELECT DISTINCT category FROM tasks WHERE status = 'open' ORDER BY category",
+);
+$categories = $cats_result->fetch_all(MYSQLI_ASSOC);
 
-$page_title  = 'Browse Tasks';
-$nav_context = 'public';
-require_once 'includes/header.php';
+$page_title = "Browse Tasks";
+$nav_context = "public";
+require_once "includes/header.php";
 ?>
 
 <div class="page-wrap">
@@ -78,9 +80,9 @@ require_once 'includes/header.php';
                 <option value="">All categories</option>
                 <?php foreach ($categories as $cat): ?>
                     <option
-                        value="<?= htmlspecialchars($cat['category']) ?>"
-                        <?= $category === $cat['category'] ? 'selected' : '' ?>>
-                        <?= htmlspecialchars($cat['category']) ?>
+                        value="<?= htmlspecialchars($cat["category"]) ?>"
+                        <?= $category === $cat["category"] ? "selected" : "" ?>>
+                        <?= htmlspecialchars($cat["category"]) ?>
                     </option>
                 <?php endforeach; ?>
             </select>
@@ -103,27 +105,42 @@ require_once 'includes/header.php';
             <div class="task-grid">
                 <?php foreach ($tasks as $task): ?>
                     <!-- Each task is a clickable card -->
-                    <a href="/bidboard/task.php?id=<?= $task['id'] ?>" class="task-card">
-                        <div class="task-card-title"><?= htmlspecialchars($task['title']) ?></div>
-                        <div class="task-card-desc"><?= htmlspecialchars($task['description']) ?></div>
+                    <a href="/bidboard/task.php?id=<?= $task[
+                        "id"
+                    ] ?>" class="task-card">
+                        <div class="task-card-title"><?= htmlspecialchars(
+                            $task["title"],
+                        ) ?></div>
+                        <div class="task-card-desc"><?= htmlspecialchars(
+                            $task["description"],
+                        ) ?></div>
 
                         <div class="task-card-meta">
                             <!-- Category badge -->
-                            <span class="badge badge-category"><?= htmlspecialchars($task['category']) ?></span>
+                            <span class="badge badge-category"><?= htmlspecialchars(
+                                $task["category"],
+                            ) ?></span>
 
                             <!-- Budget display -->
                             <span class="text-sm" style="color:var(--success); font-weight:600;">
-                                $<?= number_format($task['budget'], 2) ?>
+                                $<?= number_format($task["budget"], 2) ?>
                             </span>
 
                             <!-- Bid count -->
                             <span class="text-sm text-muted">
-                                <?= $task['bid_count'] ?> bid<?= $task['bid_count'] != 1 ? 's' : '' ?>
+                                <?= $task["bid_count"] ?> bid<?= $task[
+     "bid_count"
+ ] != 1
+     ? "s"
+     : "" ?>
                             </span>
 
                             <!-- Deadline -->
                             <span class="text-sm text-muted" style="margin-left:auto;">
-                                Due <?= date('M j', strtotime($task['deadline'])) ?>
+                                Due <?= date(
+                                    "M j",
+                                    strtotime($task["deadline"]),
+                                ) ?>
                             </span>
                         </div>
                     </a>
@@ -134,4 +151,4 @@ require_once 'includes/header.php';
     </div>
 </div>
 
-<?php require_once 'includes/footer.php'; ?>
+<?php require_once "includes/footer.php"; ?>
