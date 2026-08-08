@@ -10,6 +10,7 @@ if (isset($_SESSION["client_id"])) {
 }
 
 require_once "../includes/db.php";
+require_once "../includes/email_helper.php";
 
 $error = "";
 
@@ -31,6 +32,9 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         $error = "Name must start with a letter and contain only letters";
     } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
         $error = "Enter a valid email address.";
+    } elseif (!is_email_deliverable($email)) {
+        $error =
+            "This email address could not be verified, Please check for typos or use a different email.";
     } elseif (strlen($password) < 6) {
         $error = "Password must be at least 6 characters.";
     } elseif ($password !== $confirm) {

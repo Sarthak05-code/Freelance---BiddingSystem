@@ -3,6 +3,7 @@
 // Accessible to anyone (no login required)
 
 require_once "includes/db.php";
+require_once "includes/email_helper.php";
 
 // Get task ID from URL
 $task_id = (int) ($_GET["id"] ?? 0); // cast to int for safety
@@ -51,6 +52,9 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && $task["status"] === "open") {
         $error = "Name must start with a letter and contain only letters.";
     } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
         $error = "Enter a valid email address.";
+    } elseif (!is_email_deliverable($email)) {
+        $error =
+            "This email address could not be verfied, Please check for typos or use a different email";
     } elseif (!is_numeric($price) || $price <= 0) {
         $error = "Enter a valid bid amount.";
     } else {

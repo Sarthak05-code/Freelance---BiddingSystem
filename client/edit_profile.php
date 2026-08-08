@@ -3,6 +3,7 @@
 
 require_once "../includes/auth_client.php";
 require_once "../includes/db.php";
+require_once "../includes/email_helper.php";
 
 $client_id = $_SESSION["client_id"];
 
@@ -33,6 +34,9 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         $error = "Name must start with letter and contain only letters";
     } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
         $error = "Enter a valid email address.";
+    } elseif ($email !== $client["email"] && !is_email_deliverable($email)) {
+        $error =
+            "This email could not be verified, Please check for typos or enter a new email";
     } elseif ($current_raw === "") {
         $error = "Enter your current password to save changes.";
     } else {
