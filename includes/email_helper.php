@@ -2,7 +2,7 @@
 define("ABSTRACT_API_KEY", "c899406cc9a4451db9aaa280d19d53f6");
 
 /**
- * Validate an email using Abstract API
+ * Validate an email using Abstract API's Email Reputation endpoint
  */
 function is_email_deliverable(string $email): bool
 {
@@ -10,15 +10,12 @@ function is_email_deliverable(string $email): bool
         return false;
     }
 
-    if (
-        ABSTRACT_API_KEY === "c899406cc9a4451db9aaa280d19d53f6" ||
-        empty(ABSTRACT_API_KEY)
-    ) {
+    if (ABSTRACT_API_KEY === "" || empty(ABSTRACT_API_KEY)) {
         return true;
     }
 
     $url =
-        "https://emailvalidation.abstractapi.com/v1/?api_key=" .
+        "https://emailreputation.abstractapi.com/v1/?api_key=" .
         ABSTRACT_API_KEY .
         "&email=" .
         urlencode($email);
@@ -38,15 +35,14 @@ function is_email_deliverable(string $email): bool
     }
 
     $data = json_decode($response, true);
-    $isFormatValid = $data["is_valid_format"]["value"] ?? true;
-    $isDisposable = $data["is_disposable_email"]["value"] ?? false;
-    $deliverability = $data["deliverability"] ?? "UNKNOWN";
 
-    if (
-        !$isFormatValid ||
-        $isDisposable ||
-        $deliverability === "UNDELIVERABLE"
-    ) {
+    // Based on actual response structure from emailreputation endpoint
+    $deliverability = $data["email_deliverability"] ?? [];
+    $status = $deliverability["status"] ?? "unknown";
+    $isFormatValid = $deliverability["is_format_valid"] ?? true;
+
+    // Reject if format is invalid or status is undeliverable
+    if (!$isFormatValid || $status === "undeliverable") {
         return false;
     }
 
