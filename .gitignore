@@ -1,5 +1,5 @@
 # Database config — don't expose credentials
-includes/db.php
+
 includes/email_helper.php
 
 # Keep a sample so others know what db.php should look like
