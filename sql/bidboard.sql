@@ -58,3 +58,18 @@ INSERT INTO admins (username, password) VALUES (
 UPDATE admins
 SET password = '$2y$10$X.fML4y3/FWDGN/AMj4Nte71pJ2ighg33pnWIp2mOobHV.U8tBKuy'
 WHERE username = 'admin';
+
+-- Reports table (flagging tasks or bids for admin review)
+CREATE TABLE reports (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    report_type ENUM('task', 'bid') NOT NULL,       -- what kind of thing is being reported
+    task_id INT NULL,                                -- set if report_type = 'task'
+    bid_id INT NULL,                                 -- set if report_type = 'bid'
+    reporter_name VARCHAR(100) NOT NULL,              -- who filed it
+    reporter_email VARCHAR(150) NOT NULL,
+    reason TEXT NOT NULL,                             -- why they're reporting it
+    status ENUM('pending', 'reviewed', 'dismissed') DEFAULT 'pending',
+    submitted_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (task_id) REFERENCES tasks(id) ON DELETE CASCADE,
+    FOREIGN KEY (bid_id) REFERENCES bids(id) ON DELETE CASCADE
+);

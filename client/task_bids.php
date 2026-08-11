@@ -182,6 +182,11 @@ require_once "../includes/header.php";
                         <p style="margin-top:0.5rem; font-size:0.9rem; line-height:1.6;">
                             <?= nl2br(htmlspecialchars($bid["pitch"])) ?>
                         </p>
+                        <div style="margin-top:0.5rem;">
+                            <a href="/bidboard/report.php?type=bid&id=<?= $bid[
+                                "id"
+                            ] ?>&task=<?= $task_id ?>" class="text-sm" style="color:var(--danger); text-decoration:none;">⚠️ Report this bid</a>
+                        </div>
                     </div>
 
                     <!-- Action buttons — only shown when task is open and bid is pending -->

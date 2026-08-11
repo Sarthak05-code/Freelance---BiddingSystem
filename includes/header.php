@@ -54,6 +54,7 @@ $nav_context = $nav_context ?? "public";
                     <li><a href="/bidboard/admin/tasks.php">Tasks</a></li>
                     <li><a href="/bidboard/admin/bids.php">Bids</a></li>
                     <li><a href="/bidboard/admin/clients.php">Clients</a></li>
+                    <li><a href="/bidboard/admin/reports.php">Reports</a></li>
                     <li><a href="/bidboard/auth/logout.php?role=admin">Logout</a></li>
                 <?php endif; ?>
             </ul>

@@ -174,6 +174,9 @@ require_once "includes/header.php";
                         <div style="line-height:1.7; color:var(--text);">
                             <?= nl2br(htmlspecialchars($task["description"])) ?>
                         </div>
+                        <div style="margin-top:1rem; padding-top:1rem; border-top:1px solid var(--border);">
+                            <a href="/bidboard/report.php?type=task&id=<?= $task_id ?>" class="text-sm" style="color:var(--danger); text-decoration:none;">⚠️ Report this task</a>
+                        </div>
                     </div>
                 </div>
 
