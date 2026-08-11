@@ -20,11 +20,11 @@ Clients post tasks, freelancers bid on them without needing an account, and clie
 
 ## Roles
 
-| Role       | Access                                                        |
-| ---------- | ------------------------------------------------------------- |
-| Admin      | View/delete all tasks and bids, manage clients                |
-| Client     | Register, post tasks, view bids, accept/reject, mark complete |
-| Freelancer | Browse tasks, submit bids, check bid status by email          |
+| Role       | Access                                                                     |
+| ---------- | -------------------------------------------------------------------------- |
+| Admin      | View/delete all tasks and bids, manage clients, review reports             |
+| Client     | Register, post tasks, view bids, accept/reject, mark complete, report bids |
+| Freelancer | Browse tasks, submit bids, check bid status by email, report tasks         |
 
 ---
 
@@ -100,34 +100,37 @@ BidBoard optionally verifies that submitted emails are real and deliverable (not
 ```
 bidboard/
 ├── index.php ← Public task listing (homepage)
-├── task.php ← Single task view + bid submission form
+├── task.php ← Single task view + bid submission form + report task link
 ├── bid_status.php ← Freelancer bid history lookup by email
+├── report.php ← Shared report form for tasks (public) and bids (client-only)
 ├── setup.bat ← Automates first-time db.php setup
 │
 ├── auth/
 │   ├── admin_login.php ← Admin login
 │   ├── client_login.php ← Client login
 │   ├── client_register.php ← Client registration
-│   └── logout.php ← Handles logout for both roles
+│   └── logout.php ← Handles logout for both roles (session-isolated)
 │
 ├── client/
 │   ├── dashboard.php ← Client overview + task table
 │   ├── post_task.php ← Post a new task
-│   ├── task_bids.php ← View bids on a task, accept/reject
+│   ├── task_bids.php ← View bids on a task, accept/reject, report bids
 │   ├── edit_task.php ← Edit an open task
 │   └── edit_profile.php ← Update name, email, password
 │
 ├── admin/
-│   ├── dashboard.php ← Platform-wide stats + recent tasks
+│   ├── dashboard.php ← Platform-wide stats + recent tasks + pending reports
 │   ├── tasks.php ← All tasks with search + status filter
 │   ├── bids.php ← All bids with search + status filter
-│   └── clients.php ← Manage clients, activate/deactivate
+│   ├── clients.php ← Manage clients, activate/deactivate
+│   └── reports.php ← Review and manage task/bid reports
 │
 ├── actions/
 │   ├── accept_bid.php ← Accepts a bid, rejects all others, sets task in_progress
 │   ├── reject_bid.php ← Rejects a single bid
 │   ├── update_task_status.php ← Marks task as completed
-│   └── delete_task.php ← Deletes an open task
+│   ├── delete_task.php ← Deletes an open task
+│   └── update_report_status.php ← Admin reviews or dismisses a report
 │
 ├── includes/
 │   ├── db.php ← MySQLi connection + CSRF token helpers
@@ -163,6 +166,13 @@ bidboard/
 - **Client edit task** — edit title, description, category, budget, deadline while task is open
 - **Context bar** — colored strip below navbar shows current role (guest / client / admin)
 
+### Reporting
+
+- **Report a task** — anyone can report a public task from the task detail page (no login needed)
+- **Report a bid** — clients can report bids on their own tasks from the bid management page
+- **Admin review** — admins see all reports in a dedicated page with pending/reviewed/dismissed status
+- **Dashboard alert** — pending report count shown on admin dashboard with quick link
+
 ### Security
 
 - **CSRF protection** — every state-changing form includes a per-session token, verified server-side before processing
@@ -175,7 +185,7 @@ bidboard/
 
 - **Server-side validation** on every form field (required, defense-in-depth even if JS is bypassed)
 - **Real-time client-side validation** — instant feedback as the user types for name (letters only), email format, password length/match, and numeric fields (budget, bid price)
-- **Email deliverability check** — integrates Abstract API to verify submitted emails are real and deliverable, not just correctly formatted (applied at client registration, profile email changes, and bid submission)
+- **Email deliverability check** — integrates Abstract API to verify submitted emails are real and deliverable, not just correctly formatted (applied at client registration, profile email changes, bid submission, and report submission)
 
 ---
 
@@ -196,7 +206,7 @@ bidboard/
 
 ### No pagination
 
-- Admin tasks and bids tables load all rows at once. With a large dataset this will get slow. Consider adding `LIMIT + OFFSET` pagination if the project is extended.
+- Admin tasks, bids, and reports tables load all rows at once. With a large dataset this will get slow. Consider adding `LIMIT + OFFSET` pagination if the project is extended.
 
 ### Email verification API limits
 
@@ -216,6 +226,7 @@ bidboard/
 | v2      | Duplicate bid prevention, admin search, client edit profile                                               |
 | v3      | Freelancer bid history, client edit task, context bar                                                     |
 | v4      | CSRF protection, session regeneration, real-time + name/email validation, Abstract API email verification |
+| v5      | Reporting system — task reports (public), bid reports (client), admin review panel, session isolation fix |
 
 ---
 
