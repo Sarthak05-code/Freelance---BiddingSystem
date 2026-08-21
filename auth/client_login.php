@@ -18,36 +18,42 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     if (!verify_csrf_token($_POST["csrf_token"] ?? "")) {
         die("Invalid CSRF token. Please go back and try again.");
     }
-    $email = trim($_POST["email"] ?? "");
-    // removal of trimmed password.
-    $password = $_POST["password"] ?? "";
-
-    if ($email === "" || $password === "") {
-        $error = "Please fill in both fields.";
+    if (is_rate_limited("client_login", 5, 60)) {
+        $error = "Too many login attempt. Try again later";
     } else {
-        // Find client by email
-        $stmt = $conn->prepare(
-            "SELECT id, name, email, password, is_active FROM clients WHERE email = ?",
-        );
-        $stmt->bind_param("s", $email);
-        $stmt->execute();
-        $result = $stmt->get_result();
-        $client = $result->fetch_assoc();
-        $stmt->close();
+        $email = trim($_POST["email"] ?? "");
+        // removal of trimmed password.
+        $password = $_POST["password"] ?? "";
 
-        if (!$client) {
-            $error = "No account found with that email.";
-        } elseif (!$client["is_active"]) {
-            $error = "Your account has been deactivated. Contact admin.";
-        } elseif (!password_verify($password, $client["password"])) {
-            $error = "Incorrect password.";
+        if ($email === "" || $password === "") {
+            $error = "Please fill in both fields.";
         } else {
-            // Login successful — store in session
-            session_regenerate_id(true);
-            $_SESSION["client_id"] = $client["id"];
-            $_SESSION["client_name"] = $client["name"];
-            header("Location: /bidboard/client/dashboard.php");
-            exit();
+            // Find client by email
+            $stmt = $conn->prepare(
+                "SELECT id, name, email, password, is_active FROM clients WHERE email = ?",
+            );
+            $stmt->bind_param("s", $email);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            $client = $result->fetch_assoc();
+            $stmt->close();
+
+            if (!$client) {
+                $error = "No account found with that email.";
+            } elseif (!$client["is_active"]) {
+                $error = "Your account has been deactivated. Contact admin.";
+            } elseif (!password_verify($password, $client["password"])) {
+                $error = "Incorrect password.";
+            } else {
+                // Login successful — store in session
+                unset($_SESSION["rate_limit"]["client_login"]);
+                session_regenerate_id(true);
+                $_SESSION["client_id"] = $client["id"];
+                $_SESSION["client_name"] = $client["name"];
+
+                header("Location: /bidboard/client/dashboard.php");
+                exit();
+            }
         }
     }
 }

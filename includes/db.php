@@ -37,4 +37,27 @@ function verify_csrf_token($token)
         hash_equals($_SESSION["csrf_token"], $token ?? "");
 }
 
+function is_rate_limited(
+    string $action_key,
+    int $max_attempt = 5,
+    int $windows_seconds = 60,
+): bool {
+    $now = time();
+
+    if (!isset($_SESSION["rate_limit"][$action_key])) {
+        $_SESSION["rate_limit"][$action_key] = [];
+    }
+
+    $_SESSION["rate_limit"][$action_key] = array_filter(
+        $_SESSION["rate_limit"][$action_key],
+        fn($timestamp) => $now - $timestamp < $windows_seconds,
+    );
+
+    if (count($_SESSION["rate_limit"][$action_key]) >= $max_attempt) {
+        return true; // rate limited
+    }
+    $_SESSION["rate_limit"][$action_key][] = $now;
+    return false;
+}
+
 ?>
