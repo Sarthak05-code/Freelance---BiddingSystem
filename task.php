@@ -387,6 +387,20 @@ if (priceInput) {
         }
     });
 }
+
+const priceInputEl = document.getElementById('proposed_price')
+if (priceInputEl) {
+  priceInputEl.addEventListener('keydown' , (e) => {
+    if (e.key === '-' || e.key === "Subtract") {
+      e.preventDefault()
+    }
+  })
+  priceInputEl.addEventListener('input' , () => {
+    if (priceInputEl.value.includes('-')) {
+      priceInputEl.value = priceInputEl.value.replace(/-/g,"")
+    }
+  })
+}
 </script>
 
 <?php require_once "includes/footer.php"; ?>

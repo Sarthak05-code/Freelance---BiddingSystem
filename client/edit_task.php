@@ -228,6 +228,21 @@ budgetInput.addEventListener('input', () => {
         budgetInput.style.borderColor = '';
     }
 });
+
+const budgetInputEl = document.getElementById('budget');
+if (budgetInputEl) {
+    budgetInputEl.addEventListener('keydown', (e) => {
+        if (e.key === '-' || e.key === 'Subtract') {
+            e.preventDefault();
+        }
+    });
+
+    budgetInputEl.addEventListener('input', () => {
+        if (budgetInputEl.value.includes('-')) {
+            budgetInputEl.value = budgetInputEl.value.replace(/-/g, '');
+        }
+    });
+}
 </script>
 
 <?php require_once "../includes/footer.php"; ?>
