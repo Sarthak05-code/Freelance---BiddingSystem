@@ -39,7 +39,7 @@ Before making changes, skim the **Folder Structure** section in the README. Roug
 
 1. Create a branch off `main`: `git checkout -b fix/short-description` or `feature/short-description`.
 2. Make your change, and test it manually against a local XAMPP setup (there's no automated test suite yet beyond the PHP lint CI check).
-3. Confirm `.github/workflows/php-lint.yml` would pass — i.e., your PHP files have no syntax errors (`php -l yourfile.php`).
+3. Confirm `.github/workflows/php.yml` would pass — i.e., your PHP files have no syntax errors (`php -l yourfile.php`).
 4. Commit with a clear message describing *what* and *why*.
 5. Open a pull request using the PR template and fill it out — this makes review much faster.
 
