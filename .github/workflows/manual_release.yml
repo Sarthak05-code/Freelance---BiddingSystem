@@ -1,0 +1,130 @@
+# .github/workflows/manual-release.yml
+name: 🚀 Manual Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version tag (e.g., 0.1.0, 1.2.3)'
+        required: true
+        type: string
+      prerelease:
+        description: 'Mark as pre-release?'
+        required: false
+        type: boolean
+        default: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout full history
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Generate Release Notes
+        id: changelog
+        run: |
+          PREV_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+          
+          if [ -z "$PREV_TAG" ]; then
+            echo "🆕 First release — including all commits"
+            COMMIT_RANGE=""
+          else
+            echo "📌 Previous tag: $PREV_TAG"
+            COMMIT_RANGE="${PREV_TAG}..HEAD"
+          fi
+          
+          ALL_COMMITS=$(git log $COMMIT_RANGE --pretty=format:"%s|%an" --no-merges --reverse)
+          
+          FEATURES=""
+          FIXES=""
+          DOCS=""
+          REFACTORS=""
+          PERFS=""
+          CHORES=""
+          BREAKING=""
+          OTHERS=""
+          
+          while IFS='|' read -r msg author; do
+            [ -z "$msg" ] && continue
+            clean_msg="- ${msg} by **${author}**"
+            
+            # Conventional commit prefixes
+            if echo "$msg" | grep -qiE "^feat(\(.+\))?!?:"; then
+              FEATURES="${FEATURES}${clean_msg}"$'\n'
+            elif echo "$msg" | grep -qiE "^fix(\(.+\))?!?:"; then
+              FIXES="${FIXES}${clean_msg}"$'\n'
+            elif echo "$msg" | grep -qiE "^docs(\(.+\))?!?:"; then
+              DOCS="${DOCS}${clean_msg}"$'\n'
+            elif echo "$msg" | grep -qiE "^refactor(\(.+\))?!?:"; then
+              REFACTORS="${REFACTORS}${clean_msg}"$'\n'
+            elif echo "$msg" | grep -qiE "^perf(\(.+\))?!?:"; then
+              PERFS="${PERFS}${clean_msg}"$'\n'
+            elif echo "$msg" | grep -qiE "^chore(\(.+\))?!?:|^ci(\(.+\))?!?:"; then
+              CHORES="${CHORES}${clean_msg}"$'\n'
+            
+            # Keyword fallback for non-conventional commits
+            elif echo "$msg" | grep -qiE "add|new|implement|create|introduce"; then
+              FEATURES="${FEATURES}${clean_msg}"$'\n'
+            elif echo "$msg" | grep -qiE "fix|bug|crash|error|broken|resolve|repair"; then
+              FIXES="${FIXES}${clean_msg}"$'\n'
+            elif echo "$msg" | grep -qiE "doc|readme|comment|guide|wiki"; then
+              DOCS="${DOCS}${clean_msg}"$'\n'
+            elif echo "$msg" | grep -qiE "refactor|rewrite|restructure|clean|improve"; then
+              REFACTORS="${REFACTORS}${clean_msg}"$'\n'
+            elif echo "$msg" | grep -qiE "test|spec|coverage"; then
+              CHORES="${CHORES}${clean_msg}"$'\n'
+            elif echo "$msg" | grep -qiE "perf|speed|fast|slow|optimize|cache|memory"; then
+              PERFS="${PERFS}${clean_msg}"$'\n'
+            elif echo "$msg" | grep -qiE "bump|update|upgrade|version|package|dep"; then
+              CHORES="${CHORES}${clean_msg}"$'\n'
+            elif echo "$msg" | grep -qiE "breaking|BREAKING"; then
+              BREAKING="${BREAKING}${clean_msg}"$'\n'
+            else
+              OTHERS="${OTHERS}${clean_msg}"$'\n'
+            fi
+          done <<< "$ALL_COMMITS"
+          
+          BODY="## 🎉 What's New in v${{ github.event.inputs.version }}"
+          BODY="${BODY}"$'\n\n'
+          
+          [ -n "$FEATURES" ] && BODY="${BODY}### ✨ Features"$'\n'"${FEATURES}"$'\n'
+          [ -n "$FIXES" ] && BODY="${BODY}### 🐛 Bug Fixes"$'\n'"${FIXES}"$'\n'
+          [ -n "$BREAKING" ] && BODY="${BODY}### ⚠️ Breaking Changes"$'\n'"${BREAKING}"$'\n'
+          [ -n "$PERFS" ] && BODY="${BODY}### ⚡ Performance"$'\n'"${PERFS}"$'\n'
+          [ -n "$REFACTORS" ] && BODY="${BODY}### 🔨 Refactoring"$'\n'"${REFACTORS}"$'\n'
+          [ -n "$DOCS" ] && BODY="${BODY}### 📚 Documentation"$'\n'"${DOCS}"$'\n'
+          [ -n "$CHORES" ] && BODY="${BODY}### 🧹 Chores"$'\n'"${CHORES}"$'\n'
+          [ -n "$OTHERS" ] && BODY="${BODY}### 📝 Other Changes"$'\n'"${OTHERS}"$'\n'
+          
+          TOTAL=$(echo "$ALL_COMMITS" | grep -c "^" || echo "0")
+          BODY="${BODY}---"$'\n'
+          BODY="${BODY}**Total commits:** ${TOTAL}"
+          
+          echo "body<<EOF" >> $GITHUB_OUTPUT
+          echo "$BODY" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Create and Push Tag
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag -a "v${{ github.event.inputs.version }}" -m "Release v${{ github.event.inputs.version }}"
+          git push origin "v${{ github.event.inputs.version }}"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: v${{ github.event.inputs.version }}
+          name: 🚀 Release v${{ github.event.inputs.version }}
+          body: ${{ steps.changelog.outputs.body }}
+          draft: false
+          prerelease: ${{ github.event.inputs.prerelease }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          
